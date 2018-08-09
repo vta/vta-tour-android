@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorLightBlue"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/video_control_button_restart"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:drawablePadding="@dimen/media_drawable_padding"
+        android:drawableTop="@drawable/ic_restart"
+        android:gravity="center"
+        android:padding="@dimen/media_button_padding"
+        android:text="@string/restart"
+        android:textColor="@color/colorWhite" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/colorWhite" />
+
+    <TextView
+        android:id="@+id/video_control_button_play_or_pause"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:drawablePadding="@dimen/media_drawable_padding"
+        android:drawableTop="@drawable/ic_play"
+        android:gravity="center"
+        android:padding="@dimen/media_button_padding"
+        android:text="@string/play"
+        android:textColor="@color/colorWhite" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/colorWhite" />
+
+    <TextView
+        android:id="@+id/video_control_button_view_pois"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:drawablePadding="@dimen/media_drawable_padding"
+        android:drawableTop="@drawable/ic_poi"
+        android:gravity="center"
+        android:padding="@dimen/media_button_padding"
+        android:text="@string/view_pois"
+        android:textColor="@drawable/text_color_selector" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/colorWhite" />
+
+    <TextView
+        android:id="@+id/video_control_button_navigation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:drawablePadding="@dimen/media_drawable_padding"
+        android:drawableTop="@drawable/ic_navigation"
+        android:gravity="center"
+        android:padding="@dimen/media_button_padding"
+        android:text="@string/navigation"
+        android:textColor="@drawable/text_color_selector" />
+
+</LinearLayout>

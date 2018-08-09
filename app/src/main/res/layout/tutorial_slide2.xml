@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorWhite">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="@string/slide_2_title"
+            android:textAllCaps="true"
+            android:textColor="@color/splash_text_header"
+            android:textSize="@dimen/splash_text_header" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center_horizontal"
+            android:text="@string/slide_2_desc"
+            android:textAlignment="center"
+            android:textColor="@color/splash_text_normal"
+            android:textSize="@dimen/splash_text_normal" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:adjustViewBounds="true"
+            android:padding="@dimen/activity_vertical_margin"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_walkthrough_2" />
+
+    </LinearLayout>
+
+</RelativeLayout>

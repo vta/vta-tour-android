@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".ui.activities.videoMapScreen.VideoMapActivitytest"
+    tools:showIn="@layout/activity_video_map_test">
+
+    <!--<TextView-->
+        <!--android:id="@+id/route_name"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="?android:attr/listPreferredItemHeightSmall"-->
+        <!--android:background="@color/colorPrimary"-->
+        <!--android:paddingLeft="@dimen/value_5dp"-->
+        <!--android:paddingTop="@dimen/value_5dp"-->
+        <!--android:textColor="@color/colorWhite"-->
+        <!--android:textSize="12sp" />-->
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <com.vta.virtualtour.ui.customView.CustomVideoView
+            android:id="@+id/video_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true" />
+
+        <ProgressBar
+            android:id="@+id/video_buffering_progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <com.vta.virtualtour.ui.customView.VideoControlView
+        android:id="@+id/video_control"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>
+

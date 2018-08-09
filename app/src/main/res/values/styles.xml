@@ -1,0 +1,111 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow</item>
+        <item name="spinnerStyle">@style/Widget.App.Spinner</item>
+        <item name="android:spinnerStyle">@style/Widget.App.Spinner</item>
+    </style>
+
+    <style name="TabLayoutStyle" parent="Base.Widget.Design.TabLayout">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+
+    <style name="AppMapTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <item name="android:actionOverflowButtonStyle">@style/MyActionButtonOverflow</item>
+        <item name="actionOverflowMenuStyle">@style/OverflowMenu</item>
+        <item name="spinnerStyle">@style/Widget.App.Spinner</item>
+        <item name="android:spinnerStyle">@style/Widget.App.Spinner</item>
+        <item name="android:actionBarStyle">@style/AppMapTheme.ActionBar</item>
+        <item name="actionBarStyle">@style/AppMapTheme.ActionBar</item>
+
+    </style>
+
+
+    <style name="AppMapTheme.ActionBar" parent="@style/Widget.AppCompat.ActionBar">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="background">@color/colorPrimary</item>
+        <item name="android:titleTextStyle">@style/AppMapTheme.ActionBar.TitleTextStyle</item>
+        <item name="android:subtitleTextStyle">@style/AppMapTheme.ActionBar.TitleTextStyle</item>
+        <item name="titleTextStyle">@style/AppMapTheme.ActionBar.TitleTextStyle</item>
+        <item name="subtitleTextStyle">@style/AppMapTheme.ActionBar.TitleTextStyle</item>
+
+    </style>
+
+    <style name="AppMapTheme.ActionBar.TitleTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">12sp</item>
+        <item name="android:labelTextSize">12sp</item>
+        <item name="android:textColor">@color/colorWhite</item>
+    </style>
+
+    <style name="NoActionBarTheme" parent="AppTheme">
+        <!-- Customize your theme here. -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- Style to replace actionbar overflow icon. set item 'android:actionOverflowButtonStyle' in AppTheme -->
+    <style name="MyActionButtonOverflow" parent="android:style/Widget.Holo.Light.ActionButton.Overflow">
+        <item name="android:src">@drawable/ic_menu_dots</item>
+        <item name="android:background">?android:attr/actionBarItemBackground</item>
+
+    </style>
+
+    <style name="OverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:overlapAnchor">false</item>
+        <item name="android:dropDownVerticalOffset">3.0dip</item>
+    </style>
+
+    <!--<style name="RatingBar" parent="Theme.AppCompat">-->
+    <!--<item name="android:colorControlActivated">@color/rating_star_selected</item>-->
+    <!--<item name="colorAccent">@color/rating_star_selected</item>-->
+    <!--<item name="android:colorControlNormal">@color/rating_star_unselected</item>-->
+    <!--</style>-->
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:background">@color/colorWhite</item>
+    </style>
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Widget.App.Spinner" parent="@style/Widget.AppCompat.Spinner">
+        <item name="overlapAnchor">true</item>
+        <item name="android:background">@drawable/custom_spinner_arrow</item>
+    </style>
+
+    <!--<style name="CustomHeartsRatingBar" parent="@android:style/Widget.RatingBar">-->
+    <!--<item name="android:progressDrawable">@drawable/ratingbar_hearts</item>-->
+    <!--<item name="android:minHeight">32dip</item>-->
+    <!--<item name="android:maxHeight">32dip</item>-->
+    <!--</style>-->
+
+    <style name="CustomRatingBar" parent="Theme.AppCompat">
+        <item name="android:colorControlHighlight">#FDD32E</item>
+        <item name="android:colorControlNormal">#c5c5c5</item>
+        <item name="android:colorControlActivated">#FDD32E</item>
+        <item name="colorAccent">#FDD32E</item>
+    </style>
+
+    <style name="custom_rating_bar" parent="@android:style/Widget.RatingBar">
+        <item name="android:progressDrawable">@drawable/rating_bar_selector_images</item>
+        <item name="android:minHeight">20dp</item>
+        <item name="android:maxHeight">20dp</item>
+    </style>
+
+</resources>

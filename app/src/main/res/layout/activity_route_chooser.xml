@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_route_chooser"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.vta.virtualtour.ui.activities.routeChooserScreen.RouteChooserActivity">
+
+    <RelativeLayout
+        android:id="@+id/layout_view_route"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/colorPrimary">
+
+        <Button
+            android:id="@+id/route_chooser_button_view_route"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@android:color/transparent"
+            android:text="@string/button_view_route"
+            android:textAllCaps="false"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/colorWhite" />
+
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/layout_view_route"
+        android:layout_alignParentTop="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/value_10dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/value_5dp"
+                android:layout_marginRight="@dimen/value_5dp"
+                android:layout_marginTop="@dimen/value_10dp"
+                android:background="@drawable/input_field_background"
+                android:elevation="@dimen/value_10dp"
+                android:padding="@dimen/value_5dp">
+
+                <TextView
+                    android:id="@+id/route_chooser_label_routes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/value_20dp"
+                    android:paddingTop="@dimen/value_5dp"
+                    android:text="@string/routes"
+                    android:textSize="13sp" />
+
+                <ImageView
+                    android:id="@+id/route_chooser_clear_routes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@+id/routes_auto_complete_text_view"
+                    android:layout_alignParentEnd="true"
+                    android:layout_below="@+id/route_chooser_label_routes"
+                    android:paddingBottom="@dimen/value_10dp"
+                    android:paddingEnd="@dimen/value_10dp"
+                    android:src="@drawable/places_ic_clear" />
+
+                <AutoCompleteTextView
+                    android:id="@+id/routes_auto_complete_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/route_chooser_label_routes"
+                    android:layout_marginStart="13dp"
+                    android:layout_marginTop="-12dp"
+                    android:layout_toStartOf="@id/route_chooser_clear_routes"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:hint="@string/type_your_route"
+                    android:singleLine="true"
+                    android:textSize="15sp" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/value_5dp"
+                android:layout_marginRight="@dimen/value_5dp"
+                android:layout_marginTop="@dimen/value_10dp"
+                android:background="@drawable/input_field_background"
+                android:elevation="@dimen/value_10dp"
+                android:orientation="vertical"
+                android:padding="@dimen/value_5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/value_20dp"
+                    android:paddingTop="@dimen/value_5dp"
+                    android:text="@string/direction"
+                    android:textSize="13sp" />
+
+                <com.vta.virtualtour.ui.customView.NoDefaultSpinner
+                    android:id="@+id/direction_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/value_40dp"
+                    android:layout_marginEnd="13dp"
+                    android:layout_marginStart="13dp"
+                    android:layout_marginTop="-12dp"
+                    android:prompt="@string/choose_direction_spinner_title" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/value_5dp"
+                android:layout_marginRight="@dimen/value_5dp"
+                android:layout_marginTop="@dimen/value_10dp"
+                android:background="@drawable/input_field_background"
+                android:elevation="@dimen/value_10dp"
+                android:orientation="vertical"
+                android:padding="@dimen/value_5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/value_20dp"
+                    android:paddingTop="@dimen/value_5dp"
+                    android:text="@string/departure"
+                    android:textSize="13sp" />
+
+                <com.vta.virtualtour.ui.customView.NoDefaultSpinner
+                    android:id="@+id/departure_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/value_40dp"
+                    android:layout_marginEnd="13dp"
+                    android:layout_marginStart="13dp"
+                    android:layout_marginTop="-12dp"
+                    android:prompt="@string/choose_departure_spinner_title" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/value_5dp"
+                android:layout_marginRight="@dimen/value_5dp"
+                android:layout_marginTop="@dimen/value_10dp"
+                android:background="@drawable/input_field_background"
+                android:elevation="@dimen/value_10dp"
+                android:orientation="vertical"
+                android:padding="@dimen/value_5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/value_20dp"
+                    android:paddingTop="@dimen/value_5dp"
+                    android:text="@string/destination"
+                    android:textSize="13sp" />
+
+                <com.vta.virtualtour.ui.customView.NoDefaultSpinner
+                    android:id="@+id/destination_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/value_40dp"
+                    android:layout_marginEnd="13dp"
+                    android:layout_marginStart="13dp"
+                    android:layout_marginTop="-12dp"
+                    android:prompt="@string/choose_destination_spinner_title" />
+
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/route_chooser_checkbox_current_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="@dimen/value_10dp"
+                android:text="@string/use_current_location" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/progress_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black_transperant"
+        android:clickable="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/progress_bar_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/fetch_current_location"
+            android:textColor="@color/colorWhite" />
+    </LinearLayout>
+
+
+</RelativeLayout>
