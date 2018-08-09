@@ -137,3 +137,9 @@ gradle-app.setting
 
 
 # End of https://www.gitignore.io/api/gradle,android,intellij
+
+# Local Files Ignored
+apikeys.xml
+AndroidManifest.xml
+PlayerConfig.java
+google-services.json
