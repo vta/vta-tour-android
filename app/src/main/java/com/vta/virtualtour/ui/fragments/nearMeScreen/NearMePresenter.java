@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by tushar on 7/18/2018.
+ * Created by tushar
+ * Created on 7/18/2018.
  */
 public class NearMePresenter implements NearMeContract.Presenter {
 
@@ -32,13 +33,17 @@ public class NearMePresenter implements NearMeContract.Presenter {
     @Override
     public void fetchRoutes(final String latitude, final String longitude) {
         view.showProgressBarLayout();
-        RouteManager.getSharedInstance().fetchRoutes(new RouteManager.FetchRoutesListener() {
+
+        RouteManager.getSharedInstance().fetchNearMeRoutes(latitude, longitude, new RouteManager.FetchRoutesListener() {
             @Override
             public void didFinishFetchingRoutes(List<Route> routes, String error) {
                 view.hideProgressBarLayout();
                 if (routes != null) {
                     view.enableRoutesTextView(true);
-                    view.reloadRoutes(RouteManager.getSharedInstance().getCustomNearMeRoutes(filterRoutes(routes, latitude, longitude)));
+                    RouteManager.getSharedInstance().setNearMeRoutes(routes);
+                    RouteManager.getSharedInstance().getCustomNearMeRoutes(routes);
+                    view.reloadRoutes(routes);
+
                 }
             }
         });
@@ -58,13 +63,13 @@ public class NearMePresenter implements NearMeContract.Presenter {
     @Override
     public void fetchRouteDetails(int position, final LatLng currentLocation) {
         view.showProgressBarLayout();
-        RouteManager.getSharedInstance().fetchRouteDetails(position, new RouteManager.FetchRouteDetailsListener() {
+        RouteManager.getSharedInstance().fetchNearMeRouteDetails(position, new RouteManager.FetchRouteDetailsListener() {
             @Override
             public void didFinishFetchingRouteDetails(RouteDetails routeDetails, String error) {
                 view.hideProgressBarLayout();
-                if (routeDetails != null){
-                    if (routeDetails.getStops().size() != 0){
-                        RouteManager.getSharedInstance().setNearMeStopList(getFilteredNearMeStops(routeDetails.getStops(),String.valueOf(currentLocation.latitude),String.valueOf(currentLocation.longitude)));
+                if (routeDetails != null) {
+                    if (routeDetails.getStops().size() != 0) {
+                        RouteManager.getSharedInstance().setNearMeStopList(getFilteredNearMeStops(routeDetails.getStops(), String.valueOf(currentLocation.latitude), String.valueOf(currentLocation.longitude)));
                     }
                 }
             }

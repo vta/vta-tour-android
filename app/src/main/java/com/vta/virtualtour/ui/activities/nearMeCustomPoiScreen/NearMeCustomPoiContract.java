@@ -16,7 +16,7 @@ public class NearMeCustomPoiContract {
     }
 
     interface Presenter {
-        void fetchCustomPoiList();
+        void fetchCustomPoiList(final String latitude, final String longitude);
         void showProgressBar();
         void hideProgressBar();
     }

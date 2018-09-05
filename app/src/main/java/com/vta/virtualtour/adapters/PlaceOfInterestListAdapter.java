@@ -58,7 +58,8 @@ public class PlaceOfInterestListAdapter extends RecyclerView.Adapter<PlaceOfInte
         holder.placeOfInterestName.setText(placeOfInterest.getName());
         holder.ratingBar.setRating(placeOfInterest.getRatings());
         if (placeOfInterest.getImageUrl() != null && !placeOfInterest.getImageUrl().isEmpty()) {
-            Picasso.with(context)
+
+            Picasso.get()
                     .load(placeOfInterest.getImageUrl())
                     .placeholder(R.mipmap.ic_launcher)
                     .transform(new RoundedTransformation(10, 2, context))

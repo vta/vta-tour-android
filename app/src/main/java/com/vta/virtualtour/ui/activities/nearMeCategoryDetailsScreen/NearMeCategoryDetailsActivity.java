@@ -1,5 +1,7 @@
 package com.vta.virtualtour.ui.activities.nearMeCategoryDetailsScreen;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -13,6 +15,8 @@ import android.widget.TextView;
 
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.adapters.NearMeCategoryDetailsAdapter;
+import com.vta.virtualtour.adapters.NearMeMeetupAdapter;
+import com.vta.virtualtour.models.MarkerInfo;
 import com.vta.virtualtour.models.NearByCategory;
 import com.vta.virtualtour.models.Stop;
 
@@ -20,14 +24,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NearMeCategoryDetailsActivity extends AppCompatActivity implements NearMeCategoryDetailsContract.View {
+
+    private final String connectionsBaseURL = "http://www.vta.org/routes/rt";
+
     private NearMeCategoryDetailsContract.Presenter presenter;
     private RecyclerView recyclerView;
     private LinearLayout progressBarLayout;
     private NearMeCategoryDetailsAdapter nearMeCategoryDetailsAdapter;
+    private NearMeMeetupAdapter nearMeMeetupAdapter;
+
     private TextView progressBarTextView;
     private NearByCategory nearByCategory;
     private Stop stop;
     private List<String> nearByPlaceOfInterests = new ArrayList<>();
+    private List<MarkerInfo> nearByMeetups = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +49,7 @@ public class NearMeCategoryDetailsActivity extends AppCompatActivity implements 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back);
+        getSupportActionBar().setTitle(stop.getName());
         presenter = new NearMeCategoryDetailsPresenter(this);
         setupViews();
         fetchNearbyPlacesOfInterest();
@@ -60,11 +72,30 @@ public class NearMeCategoryDetailsActivity extends AppCompatActivity implements 
     }
 
     private void setUpRecyclerListAdapter() {
-        nearMeCategoryDetailsAdapter = new NearMeCategoryDetailsAdapter(nearByPlaceOfInterests, this);
+
+        nearMeCategoryDetailsAdapter = new NearMeCategoryDetailsAdapter(nearByCategory, nearByPlaceOfInterests, new NearMeCategoryDetailsAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(String name) {
+
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(connectionsBaseURL + name));
+                startActivity(i);
+            }
+        });
+
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(nearMeCategoryDetailsAdapter);
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+    }
+
+    private void setUpMeetupRecyclerListAdapter() {
+        nearMeMeetupAdapter = new NearMeMeetupAdapter(nearByCategory, nearByMeetups, this);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(nearMeMeetupAdapter);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
     }
 
@@ -90,6 +121,14 @@ public class NearMeCategoryDetailsActivity extends AppCompatActivity implements 
         nearByPlaceOfInterests.clear();
         nearByPlaceOfInterests.addAll(list);
         setUpRecyclerListAdapter();
+        hideProgressBar();
+    }
+
+    @Override
+    public void reloadMeetupRecyclerView(List<MarkerInfo> meeetups) {
+        nearByMeetups.clear();
+        nearByMeetups.addAll(meeetups);
+        setUpMeetupRecyclerListAdapter();
         hideProgressBar();
     }
 

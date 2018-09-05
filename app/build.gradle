@@ -16,12 +16,11 @@ repositories {
 
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion "27.0.1"
+    compileSdkVersion 28
     defaultConfig {
         applicationId "com.vta.virtualtour"
         minSdkVersion 21
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
@@ -37,30 +36,46 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
+    testImplementation 'junit:junit:4.12'
+    
+    // Support Libraries
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support:recyclerview-v7:27.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+
+    // Firebase and RElated Libraries
+    implementation 'com.google.firebase:firebase-core:16.0.3'
+    implementation 'com.google.firebase:firebase-database:16.0.1'
+    implementation 'com.firebase:geofire-android:2.3.1'
+
+    // Play Services
+    implementation 'com.google.android.gms:play-services-maps:15.0.1'
+    implementation 'com.google.android.gms:play-services-places:15.0.1'
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
+
+    // Maps
+    implementation 'com.google.maps:google-maps-services:0.1.20'
+    implementation 'com.google.maps.android:android-maps-utils:0.5'
+
+    // Video and Related
+    implementation 'com.google.android.exoplayer:exoplayer:2.8.2'
+    implementation 'com.danikula:videocache:2.7.1'
+
+    // Other Utilities
+    implementation 'io.reactivex:rxandroid:1.0.1'
+    implementation 'com.squareup.picasso:picasso:2.71828'
+    api 'com.google.guava:guava:26.0-android'
+
     //Crashlytics
-    compile('com.crashlytics.sdk.android:crashlytics:2.9.1@aar') {
+    implementation('com.crashlytics.sdk.android:crashlytics:2.9.1@aar') {
         transitive = true;
     }
-
-
-    compile 'com.android.support:appcompat-v7:27.0.1'
-    compile 'com.android.support:design:27.0.1'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'com.android.support:recyclerview-v7:27.0.1'
-    compile 'com.google.firebase:firebase-database:15.0.0'
-    compile 'com.google.android.gms:play-services-maps:15.0.0'
-    compile 'com.google.android.gms:play-services-places:15.0.0'
-    compile 'com.google.android.gms:play-services-location:15.0.0'
-    compile 'io.reactivex:rxandroid:1.0.1'
-    compile 'com.google.maps:google-maps-services:0.1.20'
-    compile 'com.google.maps.android:android-maps-utils:0.5'
-    compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.google.android.exoplayer:exoplayer:2.8.2'
-    testCompile 'junit:junit:4.12'
 }
 apply plugin: 'com.google.gms.google-services'

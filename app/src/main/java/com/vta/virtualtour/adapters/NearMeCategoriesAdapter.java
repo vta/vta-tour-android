@@ -5,17 +5,17 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.models.NearByCategory;
-import com.vta.virtualtour.models.PlaceOfInterest;
-import com.vta.virtualtour.models.PlaceOfInterestCategory;
 
 import java.util.ArrayList;
 
 /**
- * Created by tushar on 7/19/2018.
+ * Created by tushar
+ * Created on 7/19/2018.
  */
 public class NearMeCategoriesAdapter extends RecyclerView.Adapter<NearMeCategoriesAdapter.MyViewHolder> {
 
@@ -46,6 +46,11 @@ public class NearMeCategoriesAdapter extends RecyclerView.Adapter<NearMeCategori
     public void onBindViewHolder(MyViewHolder holder, int position) {
         NearByCategory nearByCategory = nearByCategories.get(position);
         holder.placeOfInterestCategoryName.setText(nearByCategory.getName());
+
+        if (nearByCategory.getName().equals("Load More...")) {
+            holder.imageViewNextArrow.setVisibility(View.GONE);
+        }
+
         holder.bind(nearByCategory, listener);
     }
 
@@ -55,11 +60,15 @@ public class NearMeCategoriesAdapter extends RecyclerView.Adapter<NearMeCategori
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView placeOfInterestCategoryName;
+        ImageView imageViewNextArrow;
+        TextView placeOfInterestCategoryName;
 
-        public MyViewHolder(View view) {
+
+        MyViewHolder(View view) {
             super(view);
-            placeOfInterestCategoryName = (TextView) view.findViewById(R.id.name_textview);
+            placeOfInterestCategoryName = view.findViewById(R.id.name_textview);
+            imageViewNextArrow = view.findViewById(R.id.next_arrow_imageview);
+
         }
 
         public void bind(final NearByCategory nearByCategory, final OnItemClickListener listener) {

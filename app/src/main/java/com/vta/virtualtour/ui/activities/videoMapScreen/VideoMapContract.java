@@ -1,6 +1,7 @@
 package com.vta.virtualtour.ui.activities.videoMapScreen;
 
 import android.content.Context;
+import android.text.Spanned;
 
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.maps.model.LatLng;
@@ -32,7 +33,6 @@ public interface VideoMapContract {
         void plotRouteDetailStopsOnMap(List<Stop> stops);
         void stopVideo();
         void showMapNavigation();
-        void setNavigationDetailText(String detail);
         void showFullscreenVideoViewOrMapView(boolean isVideo);
         void loadPoiNearStop(List<MarkerInfo> poiList);
         void loadCustomPoi(List<MarkerInfo> customPoiList);
@@ -43,6 +43,11 @@ public interface VideoMapContract {
         void hidePauseButton();
         void plotRouteDetailVideoGeoPointsOnMap();
         void changeProgressBarText(String progressBarText);
+
+        void plotLimeBikes(List<MarkerInfo> limeBikes);
+
+        void showNavigationText(Spanned detail);
+
     }
 
     interface Presenter {
@@ -60,9 +65,11 @@ public interface VideoMapContract {
         void findStartSecondForSelectedRoute();
         void onMapNavigationButtonClick();
         void fullscreenButtonClicked(boolean isVideo);
-        void fetchDirectionDetails(com.google.maps.model.LatLng origin, com.google.maps.model.LatLng destination, TravelMode mode);
-        void getDirectionStep(LatLng position);
-        void loadPoiNearCar(LatLng carLocation);
+//        void fetchDirectionDetails(com.google.maps.model.LatLng origin, com.google.maps.model.LatLng destination, TravelMode mode);
+//        void getDirectionStep(LatLng position);
+//        void loadPoiNearCar(LatLng carLocation);
+
+        void updateNavigationText(LatLng origin, LatLng destination);
         void loadCustomPoi();
         void loadMeetup(LatLng carLocation);
         void loadCoord(LatLng carLocation);
@@ -70,5 +77,7 @@ public interface VideoMapContract {
         void hideProgressBar();
         void fetchIntegrations();
         void fetchRouteDetailsVideoGeoPoints(String videoViewType);
+
+        void loadLimeBike(LatLng latLongForSecond);
     }
 }

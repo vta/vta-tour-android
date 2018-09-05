@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -18,21 +18,33 @@ import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.picasso.Picasso;
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.models.PlaceOfInterest;
 import com.vta.virtualtour.ui.activities.BaseActivity;
 
-public class PlaceOfInterestDetailsActivity extends BaseActivity implements View.OnClickListener, PlaceOfInterestDetailsContract.View {
+public class PlaceOfInterestDetailsActivity extends BaseActivity implements View.OnClickListener, PlaceOfInterestDetailsContract.View, OnMapReadyCallback {
 
     private ImageView placeOfInterestImage;
     private ImageView fab;
     private PlaceOfInterest placeOfInterestDetails;
     private RatingBar ratingBar;
-    private TextView placeOfInterestName, placeOfInterestAvailability, placeOfInterestAddress, placeOfInterestPhone, placeOfInterestWebsite,placeOfInterestDistanceTime;
+    private TextView placeOfInterestName, placeOfInterestAvailability, placeOfInterestAddress, placeOfInterestPhone, placeOfInterestWebsite, placeOfInterestDistanceTime;
     private LinearLayout progressBarLayout;
     private PlaceOfInterestDetailsContract.Presenter presenter;
     private int distanceAndPoiDetailsApiCalls = 0;
+
+    private MapFragment mapFragment;
+    private GoogleMap mMap;
+    private static final int markerSize = 70;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,40 +71,63 @@ public class PlaceOfInterestDetailsActivity extends BaseActivity implements View
             presenter.fetchDistanceTimeToPoi(placeOfInterestDetails.getCurrentLatLong(), placeOfInterestDetails.getPlaceLatLong());
         }
 
+        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
     }
 
     private void populateData(PlaceOfInterest placeOfInterestDetails) {
         if (placeOfInterestDetails.getImageUrl() != null && !placeOfInterestDetails.getImageUrl().isEmpty()) {
-            Picasso.with(getApplicationContext()).load(placeOfInterestDetails.getImageUrl()).placeholder(R.drawable.vta_logo).into(placeOfInterestImage);
+            Picasso.get().load(placeOfInterestDetails.getImageUrl()).placeholder(R.drawable.vta_logo).into(placeOfInterestImage);
         }
-//        Picasso.with(getApplicationContext()).load(placeOfInterestDetails.getImageUrl()).fit().centerCrop()
-//                .placeholder(R.drawable.user_placeholder)
-//                .error(R.drawable.user_placeholder_error)
-//                .into(placeOfInterestImage);
-        placeOfInterestName.setText(placeOfInterestDetails.getName().toUpperCase());
+
+        placeOfInterestName.setText(placeOfInterestDetails.getName());
 
         if (placeOfInterestDetails.getAvailability() != null && !placeOfInterestDetails.getAvailability().isEmpty()) {
             placeOfInterestAvailability.setText(placeOfInterestDetails.getAvailability());
             placeOfInterestAvailability.setVisibility(View.VISIBLE);
+        } else {
+            placeOfInterestAvailability.setVisibility(View.GONE);
         }
 
         if (placeOfInterestDetails.getAddress() != null && !placeOfInterestDetails.getAddress().isEmpty()) {
             placeOfInterestAddress.setText(placeOfInterestDetails.getAddress());
             placeOfInterestAddress.setVisibility(View.VISIBLE);
+        } else {
+            placeOfInterestAddress.setVisibility(View.GONE);
         }
 
         if (placeOfInterestDetails.getPhone() != null && !placeOfInterestDetails.getPhone().isEmpty()) {
             placeOfInterestPhone.setText(placeOfInterestDetails.getPhone());
             placeOfInterestPhone.setVisibility(View.VISIBLE);
+        } else {
+            placeOfInterestPhone.setVisibility(View.GONE);
         }
+
 
         if (placeOfInterestDetails.getWebsite() != null && !placeOfInterestDetails.getWebsite().isEmpty()) {
             placeOfInterestWebsite.setText("View Website");
             placeOfInterestWebsite.setVisibility(View.VISIBLE);
+        } else {
+            placeOfInterestWebsite.setVisibility(View.GONE);
         }
 
+
         ratingBar.setRating(placeOfInterestDetails.getRatings());
+
+        LatLngBounds.Builder bc = new LatLngBounds.Builder();
+        bc.include(placeOfInterestDetails.getPlaceLatLong());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 60));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo( 10.0f ) );
+
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_marker_custom_poi);
+        Bitmap bitmap = bitmapDrawable.getBitmap();
+        Bitmap smallMarker = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
+
+        mMap.addMarker(new MarkerOptions()
+                .position(placeOfInterestDetails.getPlaceLatLong())
+                .icon(BitmapDescriptorFactory.fromBitmap(smallMarker))
+                .title(placeOfInterestDetails.getName()));
     }
 
     private void setUpViews() {
@@ -117,8 +152,8 @@ public class PlaceOfInterestDetailsActivity extends BaseActivity implements View
         progressBarLayout.setVisibility(View.GONE);
     }
 
-    private void checkIfApiCallsCompleted(){
-        if (distanceAndPoiDetailsApiCalls == 2){
+    private void checkIfApiCallsCompleted() {
+        if (distanceAndPoiDetailsApiCalls == 2) {
             hideProgressBar();
         }
     }
@@ -231,4 +266,24 @@ public class PlaceOfInterestDetailsActivity extends BaseActivity implements View
         checkIfApiCallsCompleted();
     }
 
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        this.mMap = googleMap;
+
+        this.mMap.getUiSettings().setZoomControlsEnabled(true);
+        this.mMap.getUiSettings().setCompassEnabled(false);
+
+        this.mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+
+            }
+        });
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
 }

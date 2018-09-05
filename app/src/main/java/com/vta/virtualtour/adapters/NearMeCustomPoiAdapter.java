@@ -1,8 +1,6 @@
 package com.vta.virtualtour.adapters;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,7 +16,8 @@ import java.util.List;
 
 
 /**
- * Created by sidhesh.naik on 30/07/18.
+ * Created by sidhesh.naik
+ * Created on 30/07/18.
  */
 
 public class NearMeCustomPoiAdapter extends RecyclerView.Adapter<NearMeCustomPoiAdapter.MyViewHolder> {
@@ -71,7 +70,7 @@ public class NearMeCustomPoiAdapter extends RecyclerView.Adapter<NearMeCustomPoi
             super(view);
             name = view.findViewById(R.id.name_textview);
             address = view.findViewById(R.id.address_textview);
-            icon =  view.findViewById(R.id.custom_poi_imageview);
+            icon = view.findViewById(R.id.custom_poi_imageview);
         }
 
         public void bind(final MarkerInfo markerInfo, final NearMeCustomPoiAdapter.OnItemClickListener listener) {

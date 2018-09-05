@@ -3,6 +3,7 @@ package com.vta.virtualtour.ui.fragments.nearMeScreen;
 import android.content.Context;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.vta.virtualtour.models.Route;
 import com.vta.virtualtour.models.Stop;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public interface NearMeContract {
         void showProgressBarLayout();
         void hideProgressBarLayout();
         void enableRoutesTextView(boolean shouldEnable);
-        void reloadRoutes(List<String> routes);
+        void reloadRoutes(List<Route> routes);
         void enableDirectionSpinner(boolean shouldEnable);
         void reloadDirections(List<String> directions);
         void hideSoftKeyboard();

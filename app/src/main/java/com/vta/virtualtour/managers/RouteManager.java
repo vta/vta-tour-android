@@ -18,7 +18,8 @@ import com.vta.virtualtour.models.RouteDetails;
 import com.vta.virtualtour.models.Stop;
 import com.vta.virtualtour.models.VideoGeoPoint;
 import com.vta.virtualtour.services.RouteServiceInterface;
-import com.vta.virtualtour.services.firebase.FirebaseRouteService;
+import com.vta.virtualtour.services.firebase.FireBaseRouteService;
+import com.vta.virtualtour.utility.JSONAsyncPostTask;
 import com.vta.virtualtour.utility.JSONAsyncTask;
 
 import org.json.JSONArray;
@@ -28,6 +29,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by tushar
@@ -35,6 +37,7 @@ import java.util.List;
  */
 
 public class RouteManager {
+
     public interface FetchRoutesListener {
         void didFinishFetchingRoutes(List<Route> routes, String error);
     }
@@ -55,12 +58,18 @@ public class RouteManager {
         void didFinishFetchingCoords(List<MarkerInfo> coords, String error);
     }
 
+    public interface FetchLimeBikeListener {
+        void didFinishFetchingLimeBikes(List<MarkerInfo> limeBikes, String error);
+    }
+
     public interface FetchPoiListener {
         void didFinishFetchingPois(List<MarkerInfo> pois, String error);
     }
 
     public interface FetchCompletePoiDetailsListener {
         void didFinishFetchingCompletePoiDetails(JSONArray jsonArray, String error);
+
+        void didFinishFetchingCompletePoiDetails(JSONArray jsonArray, String nextPageToken, String error);
     }
 
     public interface FetchIntegrationsListener {
@@ -101,8 +110,8 @@ public class RouteManager {
     private Integrations integrations;
     private boolean isCurrentLocationCheckBoxChecked = false;
     private List<NearByPlaceOfInterest> nearByPlaceOfInterests;
-    private List<Stop> nearMeStopList ;
-    private List<Stop> customStops ;
+    private List<Stop> nearMeStopList;
+    private List<Stop> customStops;
 
     public static RouteManager getSharedInstance() {
         if (routeManager == null) {
@@ -221,11 +230,21 @@ public class RouteManager {
     }
 
     public List<Stop> getCustomStops() {
-        return customStops;
+        return customStops == null ? new ArrayList<Stop>() : customStops ;
     }
 
     public void setCustomStops(List<Stop> customStops) {
         this.customStops = customStops;
+    }
+
+
+    public void fetchNearMeRoutes(String latitude, final String longitude, final FetchRoutesListener fetchRoutesListener) {
+        getRoutesService().fetchNearMeRoutes(latitude, longitude, new FetchRoutesListener() {
+            @Override
+            public void didFinishFetchingRoutes(List<Route> routes, String error) {
+                fetchRoutesListener.didFinishFetchingRoutes(routes, error);
+            }
+        });
     }
 
     public void fetchRoutes(final FetchRoutesListener fetchRoutesListener) {
@@ -238,7 +257,16 @@ public class RouteManager {
     }
 
     public void fetchRouteDetails(int position, final FetchRouteDetailsListener fetchRouteDetailsListener) {
-        getRoutesService().fetchRouteDetails(getRoute() == null? getNearMeRoute().getCode():getRoute().getCode(), position == 0 ? "a" : "b", new FetchRouteDetailsListener() {
+        getRoutesService().fetchRouteDetails(getRoute().getCode(), position == 0 ? "a" : "b", new FetchRouteDetailsListener() {
+            @Override
+            public void didFinishFetchingRouteDetails(RouteDetails routeDetails, String error) {
+                fetchRouteDetailsListener.didFinishFetchingRouteDetails(routeDetails, error);
+            }
+        });
+    }
+
+    public void fetchNearMeRouteDetails(int position, final FetchRouteDetailsListener fetchRouteDetailsListener) {
+        getRoutesService().fetchRouteDetails(getNearMeRoute().getCode(), position == 0 ? "a" : "b", new FetchRouteDetailsListener() {
             @Override
             public void didFinishFetchingRouteDetails(RouteDetails routeDetails, String error) {
                 fetchRouteDetailsListener.didFinishFetchingRouteDetails(routeDetails, error);
@@ -266,8 +294,10 @@ public class RouteManager {
     }
 
     private RouteServiceInterface getRoutesService() {
-        FirebaseRouteService routeService = new FirebaseRouteService();
-        return routeService;
+//        FireBaseRouteService routeService = new FireBaseRouteService();
+//        return routeService;
+
+        return FireBaseRouteService.getSharedInstance();
     }
 
     public List<String> getCustomRoutes(List<Route> routes) {
@@ -448,7 +478,7 @@ public class RouteManager {
         }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + carLocation.latitude + "," + carLocation.longitude + "&radius=500&key=" + context.getResources().getString(R.string.api_key));
     }
 
-    public void fetchCompletePoiDetails(LatLng currentLocation,int radius, final FetchCompletePoiDetailsListener fetchCompletePoiDetailsListener) {
+    public void fetchCompletePoiDetails(LatLng currentLocation, int radius, final FetchCompletePoiDetailsListener fetchCompletePoiDetailsListener) {
         new JSONAsyncTask(new AsyncTaskJsonResultListener() {
             @Override
             public void asyncTaskResult(JSONObject jsonObject) {
@@ -463,8 +493,68 @@ public class RouteManager {
                 }
                 fetchCompletePoiDetailsListener.didFinishFetchingCompletePoiDetails(resultsArray, null);
             }
-        }).execute("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + currentLocation.latitude + "," + currentLocation.longitude + "&radius="+radius+"&key=" + context.getResources().getString(R.string.api_key));
+        }).execute("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + currentLocation.latitude + "," + currentLocation.longitude + "&radius=" + radius + "&key=" + context.getResources().getString(R.string.api_key));
     }
+
+
+    /**
+     * Fetches POIs based on Type
+     *
+     * @param location
+     * @param radius
+     * @param poiType
+     * @param fetchCompletePoiDetailsListener
+     */
+    public void fetchCompletePoiDetails(LatLng location, int radius, String poiType, final FetchCompletePoiDetailsListener fetchCompletePoiDetailsListener) {
+
+        new JSONAsyncTask(new AsyncTaskJsonResultListener() {
+            @Override
+            public void asyncTaskResult(JSONObject jsonObject) {
+                // Mapping
+                JSONArray resultsArray = null;
+                String nextPageToken = null;
+                try {
+                    if (jsonObject != null) {
+                        resultsArray = jsonObject.getJSONArray("results");
+                        nextPageToken = jsonObject.getString("next_page_token");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                fetchCompletePoiDetailsListener.didFinishFetchingCompletePoiDetails(resultsArray, nextPageToken, null);
+            }
+        }).execute("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + location.latitude + "," + location.longitude + "&radius=" + radius + "&type=" + poiType + "&key=" + context.getResources().getString(R.string.api_key));
+
+    }
+
+    /**
+     * Fetches POIs based on Token from previous call
+     *
+     * @param nextPageToken
+     * @param fetchCompletePoiDetailsListener
+     */
+    public void fetchCompletePoiDetails(String nextPageToken, final FetchCompletePoiDetailsListener fetchCompletePoiDetailsListener) {
+        new JSONAsyncTask(new AsyncTaskJsonResultListener() {
+            @Override
+            public void asyncTaskResult(JSONObject jsonObject) {
+                // Mapping
+                JSONArray resultsArray = null;
+                String nextPageToken = null;
+                try {
+                    if (jsonObject != null) {
+                        resultsArray = jsonObject.getJSONArray("results");
+                        nextPageToken = jsonObject.getString("next_page_token");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                fetchCompletePoiDetailsListener.didFinishFetchingCompletePoiDetails(resultsArray, nextPageToken, null);
+            }
+        }).execute("https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=" + nextPageToken + ",&key=" + context.getResources().getString(R.string.api_key));
+
+    }
+
 
     public void fetchMeetups(LatLng carLocation, final FetchMeetupsListener fetchMeetupsListener) {
         new JSONAsyncTask(new AsyncTaskJsonResultListener() {
@@ -476,7 +566,7 @@ public class RouteManager {
                         JSONArray resultsArray = jsonObject.getJSONArray("results");
                         for (int i = 0; i < resultsArray.length(); i++) {
                             JSONObject data = resultsArray.getJSONObject(i);
-                            meetupList.add(new MarkerInfo(data.getString("name"), "Members: " + data.getString("members"), data.getDouble("lat"), data.getDouble("lon"), ""));
+                            meetupList.add(new MarkerInfo(data.getString("name"), "Members: " + data.getString("members"), data.getDouble("lat"), data.getDouble("lon"), "", data.getString("link")));
                         }
                     }
                 } catch (Exception e) {
@@ -484,7 +574,7 @@ public class RouteManager {
                 }
                 fetchMeetupsListener.didFinishFetchingMeetups(meetupList, null);
             }
-        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "https://api.meetup.com/2/groups/?lat=" + carLocation.latitude + "&lon=" + carLocation.longitude + "&key=" + getIntegrations().getMeetUpApiKey() + "&radius=5");
+        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "https://api.meetup.com/2/groups/?lat=" + carLocation.latitude + "&lon=" + carLocation.longitude + "&key=" + getIntegrations().getMeetUpApiKey() + "&radius=1");
     }
 
     public void fetchCoords(LatLng carLocation, final FetchCoordsListener fetchCoordsListener) {
@@ -498,7 +588,29 @@ public class RouteManager {
                         for (int i = 0; i < featuresArray.length(); i++) {
                             JSONObject data = featuresArray.getJSONObject(i);
                             JSONObject propertiesObject = data.getJSONObject("properties");
-                            coordList.add(new MarkerInfo(propertiesObject.getString("name"), "Bikes Available: " + propertiesObject.getString("num_bikes_available") + ", Docks Available: " + propertiesObject.getString("num_docks_available"), propertiesObject.getDouble("lat"), propertiesObject.getDouble("lon"), ""));
+
+                            String strType;
+
+                            if (Objects.equals(propertiesObject.getString("location_type"), "free_bike")) {
+                                strType = "Dockless";
+
+                            } else if (Objects.equals(propertiesObject.getString("location_type"), "bike_station_dock")) {
+                                strType = "Dock";
+
+                            } else if (Objects.equals(propertiesObject.getString("location_type"), "bike_station_hub")) {
+                                strType = "Dockless with hub";
+
+                            } else {
+                                strType = propertiesObject.getString("location_type").replace("_", " ");
+                            }
+
+                            if (!propertiesObject.names().toString().contains("num_docks_available")) {
+                                coordList.add(new MarkerInfo(propertiesObject.getString("name"), "Station Type: " + strType + "\nBikes Available: " + propertiesObject.getString("num_bikes_available"), propertiesObject.getDouble("lat"), propertiesObject.getDouble("lon"), ""));
+                            } else {
+
+                                coordList.add(new MarkerInfo(propertiesObject.getString("name"), "Station Type: " + strType + "\nBikes Available: " + propertiesObject.getString("num_bikes_available") + "\nDocks Available: " + propertiesObject.getString("num_docks_available"), propertiesObject.getDouble("lat"), propertiesObject.getDouble("lon"), ""));
+                            }
+
                         }
                     }
                 } catch (Exception e) {
@@ -506,7 +618,48 @@ public class RouteManager {
                 }
                 fetchCoordsListener.didFinishFetchingCoords(coordList, null);
             }
-        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "https://api.coord.co/v1/bike/location?latitude=" + carLocation.latitude + "&longitude=" + carLocation.longitude + "&radius_km=5&access_key=" + getIntegrations().getCoordApiKey());
+        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "https://api.coord.co/v1/bike/location?latitude=" + carLocation.latitude + "&longitude=" + carLocation.longitude + "&radius_km=100&access_key=" + getIntegrations().getCoordApiKey());
+    }
+
+    public void fetchLimeBike(LatLng carLocation, final FetchLimeBikeListener fetchLimeBikeListener) {
+        String url = "https://api.multicycles.org/v1?access_token=" + getIntegrations().getMultiCycleApiKey();
+        String request = "";
+        try {
+
+            JSONObject variableObject = new JSONObject()
+                    .put("lat", carLocation.latitude)
+                    .put("lng", carLocation.longitude);
+
+            String variables = variableObject.toString();
+
+            request = new JSONObject()
+                    .put("query", "query ($lat: Float!, $lng: Float!) {vehicles(lat: $lat, lng: $lng) {id\ntype\nattributes\nlat\nlng }}")
+                    .put("variables", variables).toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        new JSONAsyncPostTask(new AsyncTaskJsonResultListener() {
+            @Override
+            public void asyncTaskResult(JSONObject jsonObject) {
+
+                List<MarkerInfo> limeBikeList = new ArrayList<>();
+                try {
+                    if (jsonObject != null) {
+                        JSONArray resultsArray = (JSONArray) jsonObject.getJSONObject("data").get("vehicles");
+                        for (int i = 0; i < resultsArray.length(); i++) {
+                            JSONObject data = resultsArray.getJSONObject(i);
+                            limeBikeList.add(new MarkerInfo("LimeBike", "ID: " + data.getString("id") + "\nType: " + data.getString("type") + "", data.getDouble("lat"), data.getDouble("lng"), "", ""));
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                fetchLimeBikeListener.didFinishFetchingLimeBikes(limeBikeList, null);
+
+            }
+        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url, request);
     }
 
     public void fetchPlaceDetails(final String placeId, final String photoUrl, final LatLng currentLocation, final LatLng placeLocation, final FetchPlaceDetailsListener fetchPlaceDetailsListener) {

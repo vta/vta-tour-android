@@ -7,23 +7,23 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * Created by tushar on 13/04/18.
+ * Created by tushar
+ * Created on 13/04/18.
  */
 
 public class TutorialViewPagerAdapter extends PagerAdapter {
 
-    private LayoutInflater layoutInflater;
     private Context context;
     private int[] layouts;
 
-    public TutorialViewPagerAdapter(Context context, int[] layouts) {
+    TutorialViewPagerAdapter(Context context, int[] layouts) {
         this.context = context;
         this.layouts = layouts;
     }
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
-        layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         View view = layoutInflater.inflate(layouts[position], container, false);
         container.addView(view);

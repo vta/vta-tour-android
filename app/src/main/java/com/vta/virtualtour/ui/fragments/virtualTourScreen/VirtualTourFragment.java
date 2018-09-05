@@ -32,6 +32,7 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.managers.RouteManager;
+import com.vta.virtualtour.models.Route;
 import com.vta.virtualtour.ui.customView.NoDefaultSpinner;
 import com.vta.virtualtour.ui.fragments.BaseFragment;
 import com.vta.virtualtour.utility.Constants;
@@ -60,6 +61,7 @@ public class VirtualTourFragment extends BaseFragment implements View.OnClickLis
     private CheckBox currentLocationCheckbox;
     private String selectedRoute;
     private ImageView clearRouteImageView;
+    private List<String> routes = new ArrayList<>();
 
     public VirtualTourFragment() {
         // Required empty public constructor
@@ -309,6 +311,7 @@ public class VirtualTourFragment extends BaseFragment implements View.OnClickLis
 
     @Override
     public void reloadRoutes(List<String> routes) {
+        this.routes = routes;
         ArrayAdapter<String> routesAdapter = new ArrayAdapter<String>(getActivity(), R.layout.layout_spinner_dropdpwn, routes);
         autoCompleteTextViewRoutes.setAdapter(routesAdapter);
         progressBarLayout.setVisibility(View.GONE);
@@ -419,7 +422,8 @@ public class VirtualTourFragment extends BaseFragment implements View.OnClickLis
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         selectedRoute = ((TextView) view).getText().toString();
-        presenter.populateDirections(position);
+        int actualPoition = this.routes.indexOf(selectedRoute);
+        presenter.populateDirections(actualPoition);
         presenter.onRouteSelected();
         autoCompleteTextViewRoutes.setSelection(0);
         makeAutoCompleteTextViewNonFocusable();

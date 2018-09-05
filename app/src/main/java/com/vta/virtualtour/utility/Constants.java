@@ -1,7 +1,8 @@
 package com.vta.virtualtour.utility;
 
 /**
- * Created by tushar on 13/04/18.
+ * Created by tushar
+ * Created on 13/04/18.
  */
 
 public class Constants {

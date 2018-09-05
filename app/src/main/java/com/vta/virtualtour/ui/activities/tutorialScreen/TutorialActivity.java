@@ -1,16 +1,12 @@
 package com.vta.virtualtour.ui.activities.tutorialScreen;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.text.Html;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -20,16 +16,12 @@ import android.widget.TextView;
 
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.ui.activities.BaseActivity;
-import com.vta.virtualtour.ui.activities.routeChooserScreen.RouteChooserActivity;
 import com.vta.virtualtour.ui.activities.routesScreen.RoutesActivity;
-import com.vta.virtualtour.utility.Constants;
 
 public class TutorialActivity extends BaseActivity implements View.OnClickListener, TutorialContract.View {
 
     private ViewPager viewPager;
-    private TutorialViewPagerAdapter tutorialViewPagerAdapter;
     private LinearLayout layoutDots;
-    private TextView[] dots;
     private int[] layouts;
     private Button buttonSkip, buttonNext;
 
@@ -121,13 +113,13 @@ public class TutorialActivity extends BaseActivity implements View.OnClickListen
         // adding bottom dots
         addBottomDots(0);
 
-        tutorialViewPagerAdapter = new TutorialViewPagerAdapter(this, layouts);
+        TutorialViewPagerAdapter tutorialViewPagerAdapter = new TutorialViewPagerAdapter(this, layouts);
         viewPager.setAdapter(tutorialViewPagerAdapter);
         viewPager.addOnPageChangeListener(viewPagerPageChangeListener);
     }
 
     private void addBottomDots(int currentPage) {
-        dots = new TextView[layouts.length];
+        TextView[] dots = new TextView[layouts.length];
 
         int[] colorsActive = getResources().getIntArray(R.array.array_dot_active);
         int[] colorsInactive = getResources().getIntArray(R.array.array_dot_inactive);

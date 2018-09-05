@@ -16,7 +16,6 @@ import android.view.WindowManager;
 import com.crashlytics.android.Crashlytics;
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.ui.activities.BaseActivity;
-import com.vta.virtualtour.ui.activities.routeChooserScreen.RouteChooserActivity;
 import com.vta.virtualtour.ui.activities.routesScreen.RoutesActivity;
 import com.vta.virtualtour.ui.activities.tutorialScreen.TutorialActivity;
 import com.vta.virtualtour.utility.Constants;
@@ -84,6 +83,7 @@ public class SplashActivity extends BaseActivity implements SplashContract.View 
     }
 
     //region private methods
+
     /**
      * Making notification bar transparent
      */
@@ -105,10 +105,10 @@ public class SplashActivity extends BaseActivity implements SplashContract.View 
 
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d("TAG","Permission granted");
+                    Log.d("TAG", "Permission granted");
                     showRouteChooserScreen();
                 } else {
-                    Log.d("TAG","Permission denied");
+                    Log.d("TAG", "Permission denied");
                     finish();
                 }
                 return;

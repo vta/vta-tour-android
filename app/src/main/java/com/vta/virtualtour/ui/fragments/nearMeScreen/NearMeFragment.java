@@ -33,7 +33,7 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.model.LatLng;
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.managers.RouteManager;
-import com.vta.virtualtour.models.Stop;
+import com.vta.virtualtour.models.Route;
 import com.vta.virtualtour.ui.activities.nearMeCategoriesScreen.NearMeCategoriesActivity;
 import com.vta.virtualtour.ui.customView.NoDefaultSpinner;
 import com.vta.virtualtour.ui.fragments.BaseFragment;
@@ -54,6 +54,7 @@ public class NearMeFragment extends BaseFragment implements View.OnClickListener
     private LinearLayout progressBarLayout;
     private TextView progressBarTextView;
     private LatLng currentLocation;
+    private List<Route> routes = new ArrayList<>();
 
     public NearMeFragment() {
         // Required empty public constructor
@@ -137,9 +138,11 @@ public class NearMeFragment extends BaseFragment implements View.OnClickListener
     //region public methods
     public void currentLatLong(String latitude, String longitude) {
         Log.d(TAG, "Latitude = " + latitude + ", longitude = " + longitude);
-            progressBarTextView.setText(getResources().getString(R.string.fetch_routes));
-            currentLocation = new LatLng(Double.parseDouble(latitude),Double.parseDouble(longitude));
-            presenter.fetchRoutes(latitude, longitude);
+//        FetchCurrentLocation.getSharedInstance().stopLocationUpdates();
+
+        progressBarTextView.setText(getResources().getString(R.string.fetch_routes));
+        currentLocation = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
+        presenter.fetchRoutes(latitude, longitude);
     }
 
     /**
@@ -211,7 +214,8 @@ public class NearMeFragment extends BaseFragment implements View.OnClickListener
     @Override
     public void onResume() {
         Log.d(TAG, "onResume fired ..............");
-        super.onResume();if (FetchCurrentLocation.getSharedInstance().mGoogleApiClient != null) {
+        super.onResume();
+        if (FetchCurrentLocation.getSharedInstance().mGoogleApiClient != null) {
             if (FetchCurrentLocation.getSharedInstance().mGoogleApiClient.isConnected()) {
                 FetchCurrentLocation.getSharedInstance().startLocationUpdates();
                 Log.d(TAG, "Location update resumed .....................");
@@ -277,6 +281,8 @@ public class NearMeFragment extends BaseFragment implements View.OnClickListener
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        int actualPosition = this.routes.indexOf(parent.getItemAtPosition(position));
+        presenter.populateDirections(actualPosition);
         presenter.populateDirections(position);
         presenter.onRouteSelected();
         autoCompleteTextViewRoutes.setSelection(0);
@@ -286,7 +292,7 @@ public class NearMeFragment extends BaseFragment implements View.OnClickListener
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         if (parent.getId() == R.id.direction_spinner) {
-            presenter.fetchRouteDetails(position,currentLocation);
+            presenter.fetchRouteDetails(position, currentLocation);
         }
     }
 
@@ -312,8 +318,9 @@ public class NearMeFragment extends BaseFragment implements View.OnClickListener
     }
 
     @Override
-    public void reloadRoutes(List<String> routes) {
-        ArrayAdapter<String> routesAdapter = new ArrayAdapter<String>(getActivity(), R.layout.layout_spinner_dropdpwn, routes);
+    public void reloadRoutes(List<Route> routes) {
+        this.routes = routes;
+        ArrayAdapter<Route> routesAdapter = new ArrayAdapter<Route>(getActivity(), R.layout.layout_spinner_dropdpwn, routes);
         autoCompleteTextViewRoutes.setAdapter(routesAdapter);
         hideProgressBarLayout();
         makeAutoCompleteTextViewFocusable();
@@ -348,14 +355,14 @@ public class NearMeFragment extends BaseFragment implements View.OnClickListener
     @Override
     public void locationPermissionGranted() {
         presenter.clearRouteChooserFields();
-            // User current location
-            autoCompleteTextViewRoutes.setEnabled(false);
-            presenter.fetchCurrentLocation();
-            FetchCurrentLocation.getSharedInstance().mGoogleApiClient.connect();
-            if (FetchCurrentLocation.getSharedInstance().mGoogleApiClient.isConnected()) {
-                FetchCurrentLocation.getSharedInstance().startLocationUpdates();
-                Log.d(TAG, "Location update resumed .....................");
-            }
+        // User current location
+        autoCompleteTextViewRoutes.setEnabled(false);
+        presenter.fetchCurrentLocation();
+        FetchCurrentLocation.getSharedInstance().mGoogleApiClient.connect();
+        if (FetchCurrentLocation.getSharedInstance().mGoogleApiClient.isConnected()) {
+            FetchCurrentLocation.getSharedInstance().startLocationUpdates();
+            Log.d(TAG, "Location update resumed .....................");
+        }
 
     }
 

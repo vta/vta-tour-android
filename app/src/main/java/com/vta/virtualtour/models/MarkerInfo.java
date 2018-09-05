@@ -1,7 +1,8 @@
 package com.vta.virtualtour.models;
 
 /**
- * Created by tushar on 21-Jun-18.
+ * Created by tushar
+ * Created on 21-Jun-18.
  */
 
 public class MarkerInfo {
@@ -10,6 +11,7 @@ public class MarkerInfo {
     private double latitude;
     private double longitude;
     private String icon;
+    private String url;
 
     public MarkerInfo(String title, String subtitle, double latitude, double longitude, String icon) {
         this.title = title;
@@ -17,6 +19,15 @@ public class MarkerInfo {
         this.latitude = latitude;
         this.longitude = longitude;
         this.icon = icon;
+    }
+
+    public MarkerInfo(String title, String subtitle, double latitude, double longitude, String icon, String url) {
+        this.title = title;
+        this.subtitle = subtitle;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.icon = icon;
+        this.url = url;
     }
 
     public String getTitle() {
@@ -57,5 +68,9 @@ public class MarkerInfo {
 
     public void setIcon(String icon) {
         this.icon = icon;
+    }
+
+    public String getUrl() {
+        return url;
     }
 }

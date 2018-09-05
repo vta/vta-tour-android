@@ -1,8 +1,8 @@
 package com.vta.virtualtour.ui.activities.navigationScreen;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.DirectionsStep;
-import com.google.maps.model.LatLng;
 import com.google.maps.model.TravelMode;
 import com.vta.virtualtour.managers.NavigationManager;
 import com.vta.virtualtour.managers.RouteManager;
@@ -32,7 +32,7 @@ public class NavigationPresenter implements NavigationContract.Presenter {
 
         // Get All stops for stop by stop navigation
         for (Stop stop : RouteManager.getSharedInstance().getCustomStops()) {
-            com.google.maps.model.LatLng point = new com.google.maps.model.LatLng(stop.getLat(), stop.getLng());
+            LatLng point = new LatLng(stop.getLat(), stop.getLng());
             points.add(point);
             stops.add(stop.getName());
         }
@@ -53,7 +53,6 @@ public class NavigationPresenter implements NavigationContract.Presenter {
                 directionsSteps.clone();
                 if (directionsSteps.length > 0) {
                     for (DirectionsStep step : directionsSteps) {
-                        NavigationManager.getSharedInstance().getDirectionsStepList().add(step);
 
                         // Avoid Last entry that says "Destination has arrived"
                         int indexOfDestination = step.htmlInstructions.indexOf("Destination");

@@ -8,7 +8,8 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.ArrayList;
 
 /**
- * Created by tushar on 13/04/18.
+ * Created by tushar
+ * Created on 13/04/18.
  */
 
 public class PlaceOfInterest implements Parcelable {

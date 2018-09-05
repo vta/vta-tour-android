@@ -1,19 +1,17 @@
 package com.vta.virtualtour.ui.activities.videoMapScreen;
 
 import android.location.Location;
+import android.text.Spanned;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.maps.model.DirectionsResult;
-import com.google.maps.model.DirectionsStep;
-import com.google.maps.model.TravelMode;
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.managers.NavigationManager;
 import com.vta.virtualtour.managers.RouteManager;
 import com.vta.virtualtour.models.MarkerInfo;
 import com.vta.virtualtour.models.Stop;
 import com.vta.virtualtour.models.VideoGeoPoint;
+import com.vta.virtualtour.utility.Utils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -24,35 +22,25 @@ import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 /**
- * Created by tushar on 08/05/18.
+ * Created by tushar
+ * Created on 08/05/18.
  */
 
-public class VideoMapPreseneter implements VideoMapContract.Presenter {
+public class VideoMapPresenter implements VideoMapContract.Presenter {
 
     private static final int DIRECTION_STEP_DISTANCE = 30;
     private static final int overview = 0;
     private VideoMapContract.View view;
 
-    private final int POLLING_FREQUENCY = 1; //1 sec
     private Subscription subscription;
     private Observable<Long> observable;
 
-    public VideoMapPreseneter(VideoMapContract.View view) {
+    VideoMapPresenter(VideoMapContract.View view) {
         this.view = view;
-        //initialization
+        int POLLING_FREQUENCY = 1;
         observable = Observable.interval(POLLING_FREQUENCY, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
-    }
-
-    @Override
-    public void showBufferingProgressBar() {
-        view.showBufferingProgressBar();
-    }
-
-    @Override
-    public void hideBufferingProgressBar() {
-        view.hideBufferingProgressBar();
     }
 
     @Override
@@ -67,10 +55,10 @@ public class VideoMapPreseneter implements VideoMapContract.Presenter {
             subscription = observable.subscribe(new Action1<Long>() {
                 @Override
                 public void call(Long aLong) {
-                    System.out.println("Video Second: " + getDurationInSeconds(view.getCurrentVideoTime()));
-                    view.addMarkerOnMap(getDurationInSeconds(view.getCurrentVideoTime()));
-                    checkForVideoEndTimeForSelectedRoute(getDurationInSeconds(view.getCurrentVideoTime()));
-
+                    int duration = getDurationInSeconds(view.getCurrentVideoTime());
+                    System.out.println("Video Second: " + duration);
+                    view.addMarkerOnMap(duration);
+                    checkForVideoEndTimeForSelectedRoute(duration);
                 }
             });
         }
@@ -83,16 +71,6 @@ public class VideoMapPreseneter implements VideoMapContract.Presenter {
             subscription.unsubscribe();
             subscription = null;
         }
-    }
-
-    @Override
-    public int getDurationInSeconds(int milliSeconds) {
-        return (int) TimeUnit.MILLISECONDS.toSeconds(milliSeconds);
-    }
-
-    @Override
-    public int getDurationInMilliSeconds(int seconds) {
-        return (int) TimeUnit.SECONDS.toMillis(seconds);
     }
 
     @Override
@@ -146,57 +124,44 @@ public class VideoMapPreseneter implements VideoMapContract.Presenter {
     }
 
     @Override
-    public void fetchDirectionDetails(com.google.maps.model.LatLng origin, final com.google.maps.model.LatLng destination, final TravelMode mode) {
-
-        final List<com.google.maps.model.LatLng> points = new ArrayList<>();
-        points.add(origin);
-
-        for (Stop stop : RouteManager.getSharedInstance().getCustomStops()) {
-            com.google.maps.model.LatLng point = new com.google.maps.model.LatLng(stop.getLat(), stop.getLng());
-            points.add(point);
-        }
-        points.add(destination);
-
-        for (int i = 0; i < points.size() - 1; i++) {
-            DirectionsResult results = NavigationManager.getSharedInstance().getDirectionsDetails(points.get(i), points.get(i + 1), mode);
-            if (results != null) {
-                DirectionsStep[] directionsSteps = results.routes[overview].legs[overview].steps;
-                if (directionsSteps.length > 0) {
-//                NavigationManager.getSharedInstance().setDirectionsSteps(directionsSteps);
-                    for (DirectionsStep step : directionsSteps) {
-                        NavigationManager.getSharedInstance().getDirectionsStepList().add(step);
-                    }
-                    view.setNavigationDetailText(directionsSteps[overview].htmlInstructions);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void getDirectionStep(LatLng position) {
-//        DirectionsStep[] directionsSteps = NavigationManager.getSharedInstance().getDirectionsSteps();
-//        if(directionsSteps.length > 0) {
-        for (DirectionsStep step : NavigationManager.getSharedInstance().getDirectionsStepList()) {
-            float[] results = new float[1];
-            Location.distanceBetween(step.startLocation.lat, step.startLocation.lng, position.latitude, position.longitude, results);
-            float distanceInMeters = results[0];
-            boolean isWithin30m = distanceInMeters < 30;
-            if (isWithin30m) {
-                view.setNavigationDetailText(step.htmlInstructions);
-            }
-        }
-//        }
-    }
-
-    @Override
-    public void loadPoiNearCar(LatLng carLocation) {
-        RouteManager.getSharedInstance().fetchPoi(carLocation, new RouteManager.FetchPoiListener() {
+    public void updateNavigationText(LatLng origin, LatLng destination) {
+        NavigationManager.getSharedInstance().getNavigation(origin, destination, new NavigationManager.GetNavigationListener() {
             @Override
-            public void didFinishFetchingPois(List<MarkerInfo> pois, String error) {
-                view.loadPoiNearStop(pois);
+            public void didFinishGetNavigation(String direction, String error) {
+
+                if (!direction.equals("")) {
+                    direction = direction.replace("Head", "Heading");
+                    direction = direction.replace("\n", "");
+                    Spanned navigationText = Utils.fromHtml("<div style=\"font-size:1.20em;font-family:'OpenSans'\">" + direction + "</div>");
+                    view.showNavigationText(navigationText);
+                }
             }
         });
     }
+
+    @Override
+    public void fetchRouteDetailsVideoGeoPoints(String videoViewType) {
+        view.changeProgressBarText(view.getContext().getResources().getString(R.string.fetching_route_details));
+        view.showProgressBar();
+        RouteManager.getSharedInstance().fetchRouteDetailsVideoGeoPoints(videoViewType, RouteManager.getSharedInstance().getSelectedDirectionPosition(), new RouteManager.FetchRouteDetailsVideoGeoPointsListener() {
+            @Override
+            public void didFinishFetchingRouteDetailsVideoGeoPoints(List<VideoGeoPoint> videoGeoPoints, String error) {
+                view.hideProgressBar();
+                view.plotRouteDetailVideoGeoPointsOnMap();
+            }
+        });
+    }
+
+
+    private void checkForVideoEndTimeForSelectedRoute(int durationInSeconds) {
+        if (durationInSeconds == RouteManager.getSharedInstance().getVideoEndSecond()) {
+            stopPolling();
+            view.hidePauseButton();
+            onVideoViewChanged();
+        }
+    }
+
+    //region Marker Methods
 
     @Override
     public void loadCustomPoi() {
@@ -229,6 +194,26 @@ public class VideoMapPreseneter implements VideoMapContract.Presenter {
     }
 
     @Override
+    public void loadLimeBike(LatLng carLocation) {
+
+        RouteManager.getSharedInstance().fetchLimeBike(carLocation, new RouteManager.FetchLimeBikeListener() {
+            @Override
+            public void didFinishFetchingLimeBikes(List<MarkerInfo> limeBikes, String error) {
+                view.plotLimeBikes(limeBikes);
+            }
+        });
+    }
+
+    @Override
+    public void fetchIntegrations() {
+        RouteManager.getSharedInstance().fetchIntegrations();
+    }
+
+    //endregion
+
+    //region Helper Methods
+
+    @Override
     public void showProgressBar() {
         view.showProgressBar();
     }
@@ -239,28 +224,24 @@ public class VideoMapPreseneter implements VideoMapContract.Presenter {
     }
 
     @Override
-    public void fetchIntegrations() {
-        RouteManager.getSharedInstance().fetchIntegrations();
+    public void showBufferingProgressBar() {
+        view.showBufferingProgressBar();
     }
 
     @Override
-    public void fetchRouteDetailsVideoGeoPoints(String videoViewType) {
-        view.changeProgressBarText(view.getContext().getResources().getString(R.string.fetching_route_details));
-        view.showProgressBar();
-        RouteManager.getSharedInstance().fetchRouteDetailsVideoGeoPoints(videoViewType, RouteManager.getSharedInstance().getSelectedDirectionPosition(), new RouteManager.FetchRouteDetailsVideoGeoPointsListener() {
-            @Override
-            public void didFinishFetchingRouteDetailsVideoGeoPoints(List<VideoGeoPoint> videoGeoPoints, String error) {
-                view.hideProgressBar();
-                view.plotRouteDetailVideoGeoPointsOnMap();
-            }
-        });
+    public void hideBufferingProgressBar() {
+        view.hideBufferingProgressBar();
     }
 
-    private void checkForVideoEndTimeForSelectedRoute(int durationInSeconds) {
-        if (durationInSeconds == RouteManager.getSharedInstance().getVideoEndSecond()) {
-            stopPolling();
-            view.hidePauseButton();
-            onVideoViewChanged();
-        }
+    @Override
+    public int getDurationInSeconds(int milliSeconds) {
+        return (int) TimeUnit.MILLISECONDS.toSeconds(milliSeconds);
     }
+
+    @Override
+    public int getDurationInMilliSeconds(int seconds) {
+        return (int) TimeUnit.SECONDS.toMillis(seconds);
+    }
+
+    //endregion
 }

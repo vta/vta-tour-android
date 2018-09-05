@@ -30,8 +30,8 @@ public class FetchCurrentLocation implements LocationListener,
     private FetchCurrentLocationListener fetchCurrentLocationListener;
     private Activity activity;
     private LocationRequest mLocationRequest;
-    private static final long INTERVAL = 1000 * 10;
-    private static final long FASTEST_INTERVAL = 1000 * 5;
+    private static final long INTERVAL = 1000 * 15;
+    private static final long FASTEST_INTERVAL = 1000 * 15;
     public GoogleApiClient mGoogleApiClient;
     private Location mCurrentLocation;
     private static final String TAG = "FetchCurrentLocation";

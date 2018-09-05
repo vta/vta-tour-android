@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -15,19 +17,21 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.Spanned;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -66,7 +70,9 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.maps.model.TravelMode;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.adapters.InfoWindowCustom;
 import com.vta.virtualtour.interfaces.AsyncTaskJsonResultListener;
@@ -84,6 +90,7 @@ import com.vta.virtualtour.utility.Utils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -96,13 +103,38 @@ import static com.vta.virtualtour.utility.Constants.ROUTE_DETAILS_VIDEO_GEOPOINT
 import static com.vta.virtualtour.utility.Constants.ROUTE_DETAILS_VIDEO_GEOPOINTS_LOW_RES_RIGHT;
 import static com.vta.virtualtour.utility.Constants.ROUTE_DETAILS_VIDEO_GEOPOINTS_RIGHT;
 
-public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback, VideoControlView.VideoControlClickListener, VideoMapContract.View, CustomVideoView.VideoControlListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener, View.OnClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, AsyncTaskJsonResultListener, Player.EventListener/*, AdapterView.OnItemSelectedListener*/ {
-    private static final int GOOGLE_API_CLIENT_ID = 0;
-    //    private final static int VIDEO_FRONT_VIEW = 0;
-//    private final static int VIDEO_LEFT_VIEW = 1;
-//    private final static int VIDEO_RIGHT_VIEW = 2;
+public class VideoMapActivity extends BaseActivity implements
+        OnMapReadyCallback,
+        VideoControlView.VideoControlClickListener,
+        VideoMapContract.View,
+        CustomVideoView.VideoControlListener,
+        MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnErrorListener,
+        View.OnClickListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        AsyncTaskJsonResultListener {
 
+    private class MarkerExtra {
+        private String url;
+
+        public MarkerExtra(String url) {
+            this.url = url;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+    }
+
+    private static final int GOOGLE_API_CLIENT_ID = 0;
     private static final int markerSize = 70;
+    private static final int markerSizeBus = 80;
+
     private MapFragment mapFragment;
     private VideoControlView videoControlView;
     private SimpleExoPlayer simpleExoPlayer;
@@ -114,9 +146,9 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     private Marker stopsMarker = null;
     private Marker meetupMarker = null;
     private Marker coordMarker = null;
+    private Marker limeBikeMarker = null;
     private GoogleApiClient googleApiClient;
     private int selectedViewPosition = -1;
-    private long currentVideoSecond = 0;
     private String selectedVideoUrl = "";
 
     private TextView navigationDetailsText;
@@ -131,11 +163,22 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     private int videoPausedStateApiCalls = 0;
     private LatLng carCurrentLocation = null;
     private RelativeLayout exoPlayerView;
+    private boolean isVideoPauseButtonTapped = false;
+    private boolean isCameraViewChanged = false;
 
     private List<Marker> poiMarkers = new ArrayList<>();
-//    private ProgressBar videoProgressBar;
     private SeekBar videoSeekBar;
     private List<VideoGeoPoint> videoGeoPoints;
+    private Button mapViewButton;
+    private Button satelliteViewButton;
+
+    HashMap<Marker, MarkerExtra> markerExtraHashMap = new HashMap<Marker, MarkerExtra>();
+
+    private long currentVideoSecond = 0;
+    private int videoTimeAfterCameraViewChanged = 0;
+
+    private List<Stop> stops;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,17 +186,14 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_video_map);
 
-        Log.d("VideoMapActivity", "VideoMapActivity On Create 1");
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back);
-//        getSupportActionBar().setTitle(getIntent().getStringExtra("Direction") + "/" + getIntent().getStringExtra("RouteName"));
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setCustomView(R.layout.action_bar_title_layout);
-        ((TextView) findViewById(R.id.action_bar_title)).setText(
-                getIntent().getStringExtra("Direction") + "/" + getIntent().getStringExtra("RouteName"));
-        presenter = new VideoMapPreseneter(this);
+        String titleBarText = getIntent().getStringExtra("Direction") + "/" + getIntent().getStringExtra("RouteName");
+        ((TextView) findViewById(R.id.action_bar_title)).setText(titleBarText);
+        presenter = new VideoMapPresenter(this);
 
         setupViews();
         loadDefaultValues();
@@ -162,7 +202,8 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
 
 
     private void allSetup() {
-
+        progressBarTextView.setText(getResources().getString(R.string.loading_poi));
+        presenter.showProgressBar();
         keepScreenOn(false);
         initVideoPlayer();
         initMap();
@@ -212,6 +253,10 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        onPause();
+
+        isCameraViewChanged = true;
         // Handle item selection
         switch (item.getItemId()) {
             case android.R.id.home:
@@ -319,16 +364,21 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
                     .add(new LatLng(startVideoGeoPoint.getLat(), startVideoGeoPoint.getLng()), new LatLng(endVideoGeoPoint.getLat(), endVideoGeoPoint.getLng()))
                     .width(5)
                     .color(getResources().getColor(R.color.colorPrimary)));
-
-            // Zoom to Points
-            LatLngBounds.Builder bc = new LatLngBounds.Builder();
-            for (VideoGeoPoint item : videoGeoPoints) {
-                LatLng latLng = new LatLng(item.getLat(), item.getLng());
-                bc.include(latLng);
-            }
-            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 60));
-
         }
+
+        // Zoom to Points
+        LatLngBounds.Builder bc = new LatLngBounds.Builder();
+        for (VideoGeoPoint item : videoGeoPoints) {
+            LatLng latLng = new LatLng(item.getLat(), item.getLng());
+            bc.include(latLng);
+        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 60));
+
+
+        LatLng origin = new LatLng(videoGeoPoints.get(0).getLat(), videoGeoPoints.get(0).getLng());
+        LatLng destination = new LatLng(videoGeoPoints.get(1).getLat(), videoGeoPoints.get(1).getLng());
+
+        presenter.updateNavigationText(origin, destination);
 
         presenter.findStartSecondForSelectedRoute();
 
@@ -342,10 +392,10 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
 
     //region private methods
     private void setupViews() {
-//        simpleExoPlayer = findViewById(R.id.video_view);
         progressBarLayout = findViewById(R.id.progress_layout);
+        mapViewButton = findViewById(R.id.map_view_button);
+        satelliteViewButton = findViewById(R.id.satellite_view_button);
         progressBarTextView = findViewById(R.id.progress_bar_textview);
-//        videoProgressBar = findViewById(R.id.video_progress_bar);
         videoSeekBar = findViewById(R.id.video_seek_bar);
         exoPlayerView = findViewById(R.id.simple_exo_player_view);
 
@@ -374,24 +424,6 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
             }
         });
 
-//        simpleExoPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-//            @Override
-//            public void onPrepared(MediaPlayer mp) {
-//
-//                mp.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
-//                    @Override
-//                    public void onSeekComplete(MediaPlayer mp) {
-//                        //Seek completed. Move seekbar
-//
-//                        if (isRestart) {
-//                            isRestart = false;
-//                            simpleExoPlayer.start();
-//                        }
-//                    }
-//                });
-//
-//            }
-//        });
         bufferingProgressBar = findViewById(R.id.video_buffering_progress_bar);
         mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         navigationDetailsText = findViewById(R.id.video_map_text_navigation_details);
@@ -401,6 +433,8 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
         mapViewLayout = findViewById(R.id.map_view_layout);
         fullscreenVideoImageView.setOnClickListener(this);
         fullscreenMapImageView.setOnClickListener(this);
+        mapViewButton.setOnClickListener(this);
+        satelliteViewButton.setOnClickListener(this);
     }
 
     private void loadDefaultValues() {
@@ -415,10 +449,6 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
 
     private void initVideoPlayer() {
 
-//        simpleExoPlayer.setOnInfoListener(onInfoToPlayStateListener);
-//        simpleExoPlayer.setOnCompletionListener(this);
-//        simpleExoPlayer.setOnErrorListener(this);
-
         // Create a default TrackSelector
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory videoTrackSelectionFactory =
@@ -426,12 +456,17 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
         TrackSelector trackSelector =
                 new DefaultTrackSelector(videoTrackSelectionFactory);
 
+        if (simpleExoPlayer != null) {
+            simpleExoPlayer.removeListener(exoPlayerEventListener);
+        }
+
         //Initialize the player
         simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
 
         //Initialize simpleExoPlayerView
         simpleExoPlayerView = findViewById(R.id.exoplayer);
         simpleExoPlayerView.setPlayer(simpleExoPlayer);
+        simpleExoPlayer.addListener(exoPlayerEventListener);
 
         // Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory =
@@ -452,21 +487,13 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     }
 
     private void loadVideo(DataSource.Factory dataSourceFactory, ExtractorsFactory extractorsFactory) {
-//        Uri vidUri = Uri.parse(videoUrl);
-//        simpleExoPlayer.setVideoURI(vidUri);
-
-        // This is the MediaSource representing the media to be played.
-//        Uri videoUri = Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
         Uri videoUri = Uri.parse(selectedVideoUrl);
         MediaSource videoSource = new ExtractorMediaSource(videoUri,
                 dataSourceFactory, extractorsFactory, null, null);
 
         // Prepare the player with the source.
         simpleExoPlayer.prepare(videoSource);
-//        player.seekTo(1000);
         simpleExoPlayer.setPlayWhenReady(false);
-        simpleExoPlayer.addListener(this);
-//        simpleExoPlayer.setPlayPauseListener(this);
 
     }
 
@@ -483,22 +510,14 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     private void moveMarker(LatLng toPosition) {
 
         try {
-//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//                // TODO: Consider calling
-//                //    ActivityCompat#requestPermissions
-//                // here to request the missing permissions, and then overriding
-//                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//                //                                          int[] grantResults)
-//                // to handle the case where the user grants the permission. See the documentation
-//                // for ActivityCompat#requestPermissions for more details.
-//                return;
-//            }
+
+            carCurrentLocation = getLatLongForSecond((int) TimeUnit.MILLISECONDS.toSeconds(simpleExoPlayer.getCurrentPosition()));
+            LatLng origin = carCurrentLocation;
+
             if (carMarker != null) {
                 carMarker.remove();
             }
             mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-//            mMap.setMyLocationEnabled(false);
             mMap.setTrafficEnabled(false);
             mMap.setIndoorEnabled(false);
             mMap.setBuildingsEnabled(true);
@@ -507,19 +526,21 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder()
                     .target(mMap.getCameraPosition().target)
                     .zoom(mMap.getCameraPosition().zoom)
-//                    .bearing(30)
-//                    .tilt(45)
                     .build()));
+
+
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_bus);
+            Bitmap bitmap = bitmapDrawable.getBitmap();
+            Bitmap busMarker = Bitmap.createScaledBitmap(bitmap, markerSizeBus, markerSizeBus, false);
+
 
             carMarker = mMap.addMarker(new MarkerOptions()
                     .position(toPosition)
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_bus))
+                    .icon(BitmapDescriptorFactory.fromBitmap(busMarker))
                     .title("Car"));
 
-            // TODO: 6/16/2018 fetch directions
-//            presenter.fetchDirectionDetails(toPosition.toString(), RouteManager.getSharedInstance().getSelectedDestination().getName(),
-//                    TravelMode.DRIVING);
-            presenter.getDirectionStep(toPosition);
+            // fetch directions
+            presenter.updateNavigationText(origin, toPosition);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -528,16 +549,21 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng point) {
-                // TODO Auto-generated method stub
+                // Auto-generated method stub
 
                 if (presenter.tappedOnRoute(point)) {
 
                     if (carMarker != null) {
                         carMarker.remove();
                     }
+
+                    BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_bus);
+                    Bitmap bitmap = bitmapDrawable.getBitmap();
+                    Bitmap busMarker = Bitmap.createScaledBitmap(bitmap, markerSizeBus, markerSizeBus, false);
+
                     carMarker = mMap.addMarker(new MarkerOptions()
                             .position(point)
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_bus))
+                            .icon(BitmapDescriptorFactory.fromBitmap(busMarker))
                             .title("Car"));
                 }
             }
@@ -561,14 +587,11 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
             mapViewLayout.setVisibility(View.GONE);
             videoControlView.setVisibility(View.GONE);
             getSupportActionBar().hide();
-//            fullscreenVideoImageView.setVisibility(View.GONE);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-//            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         } else {
             navigationDetailsText.setVisibility(View.GONE);
             videoViewLayout.setVisibility(View.GONE);
             videoControlView.setVisibility(View.GONE);
-//            fullscreenMapImageView.setVisibility(View.GONE);
             getSupportActionBar().hide();
         }
     }
@@ -589,13 +612,11 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
             navigationDetailsText.setVisibility(View.VISIBLE);
             mapViewLayout.setVisibility(View.VISIBLE);
             videoControlView.setVisibility(View.VISIBLE);
-//            fullscreenVideoImageView.setVisibility(View.VISIBLE);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         } else {
             navigationDetailsText.setVisibility(View.VISIBLE);
             videoViewLayout.setVisibility(View.VISIBLE);
             videoControlView.setVisibility(View.VISIBLE);
-//            fullscreenMapImageView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -620,8 +641,6 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
 
     @Override
     public void onRestartClicked() {
-//        simpleExoPlayer.seekTo(0);
-//        simpleExoPlayer.start();
         this.isRestart = true;
         presenter.findStartSecondForSelectedRoute();
         showPauseButton();
@@ -643,18 +662,27 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
                     marker.remove();
                 }
             }
+            if (isCameraViewChanged) {
+
+                simpleExoPlayer.seekTo(videoTimeAfterCameraViewChanged);
+                isCameraViewChanged = false;
+            }
+
             onPlaying();
             poiMarkers.clear();
         }
+
     }
 
     public void loadInfoMarkers() {
         progressBarTextView.setText(getResources().getString(R.string.loading_poi));
         presenter.showProgressBar();
-        presenter.loadPoiNearCar(getLatLongForSecond((int) TimeUnit.MILLISECONDS.toSeconds(simpleExoPlayer.getCurrentPosition())));
+//        presenter.loadPoiNearCar(getLatLongForSecond((int) TimeUnit.MILLISECONDS.toSeconds(simpleExoPlayer.getCurrentPosition())));
         presenter.loadCustomPoi();
         presenter.loadMeetup(getLatLongForSecond((int) TimeUnit.MILLISECONDS.toSeconds(simpleExoPlayer.getCurrentPosition())));
         presenter.loadCoord(getLatLongForSecond((int) TimeUnit.MILLISECONDS.toSeconds(simpleExoPlayer.getCurrentPosition())));
+        presenter.loadLimeBike(getLatLongForSecond((int) TimeUnit.MILLISECONDS.toSeconds(simpleExoPlayer.getCurrentPosition())));
+
 
     }
 
@@ -676,7 +704,7 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     //region Video View callbacks
     @Override
     public void onPlaying() {
-//        simpleExoPlayer.setPlayWhenReady(true);
+        isVideoPauseButtonTapped = false;
         keepScreenOn(true);
         System.out.println("Video Played");
         videoControlView.changePlayOrPauseIcon(false);
@@ -685,7 +713,8 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
 
     @Override
     public void onPaused() {
-//        simpleExoPlayer.setPlayWhenReady(false);
+        isVideoPauseButtonTapped = true;
+        videoTimeAfterCameraViewChanged = (int) simpleExoPlayer.getCurrentPosition();
         keepScreenOn(false);
         System.out.println("Video Paused");
         videoControlView.changePlayOrPauseIcon(true);
@@ -734,6 +763,7 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
         if (this.mMap != null) {
             moveMarker(getLatLongForSecond(videoSecond));
         }
+
         float startSecond = videoGeoPoints.get(0).getSec();
         float endSecond = videoGeoPoints.get(videoGeoPoints.size() - 1).getSec();
         float progress = (videoSecond - startSecond) / (endSecond - startSecond) * 100;
@@ -764,9 +794,29 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
         startActivity(intent);
     }
 
+    public final class StopsFilter implements Predicate<Stop> {
+
+        @Override
+        public boolean apply(Stop input) {
+            return input.getSec() > currentVideoSecond;
+        }
+    }
+
     @Override
-    public void setNavigationDetailText(String detail) {
-        navigationDetailsText.setText(Utils.fromHtml(detail));
+    public void showNavigationText(Spanned detail) {
+
+        String nextStationName = "";
+        try {
+
+            ArrayList<Stop> filteredStops = Lists.newArrayList(Collections2.filter(stops, new StopsFilter()));
+            nextStationName = filteredStops.get(0).getName() + " (Connects-" + filteredStops.get(0).getRoute_list() + ")";
+        } catch (Exception ex) {
+            nextStationName = "";
+        }
+
+        String finalText = nextStationName + "\n" + detail;
+        navigationDetailsText.setText(finalText);
+
     }
 
     @Override
@@ -782,7 +832,7 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     @Override
     public void loadPoiNearStop(List<MarkerInfo> poiList) {
 
-        BitmapDrawable bitmapDrawable=(BitmapDrawable)getResources().getDrawable(R.drawable.ic_marker_custom_poi);
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_marker_custom_poi);
         Bitmap bitmap = bitmapDrawable.getBitmap();
         Bitmap smallMarker = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
 
@@ -801,7 +851,7 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     @Override
     public void loadCustomPoi(List<MarkerInfo> customPoiList) {
 
-        BitmapDrawable bitmapDrawable=(BitmapDrawable)getResources().getDrawable(R.drawable.ic_marker_custom_poi);
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_marker_custom_poi);
         Bitmap bitmap = bitmapDrawable.getBitmap();
         Bitmap smallMarker = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
 
@@ -834,9 +884,7 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
 
     @Override
     public void plotMeetup(List<MarkerInfo> meetupList) {
-
-//        BitmapDescriptorFactory.fromResource(R.drawable.ic_marker_meetup)
-        BitmapDrawable bitmapDrawable=(BitmapDrawable)getResources().getDrawable(R.drawable.ic_marker_meetup);
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_marker_meetup);
         Bitmap bitmap = bitmapDrawable.getBitmap();
         Bitmap smallMarker = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
 
@@ -847,14 +895,32 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
                     .title(meetupList.get(i).getTitle())
                     .snippet(meetupList.get(i).getSubtitle()));
             poiMarkers.add(meetupMarker);
+
+            MarkerExtra markerExtra = new MarkerExtra(meetupList.get(i).getUrl());
+            markerExtraHashMap.put(meetupMarker, markerExtra);
         }
+
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+
+                MarkerExtra extra = markerExtraHashMap.get(marker);
+
+                if (extra != null) {
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(extra.getUrl()));
+                    startActivity(i);
+                }
+            }
+        });
+
         videoPausedStateApiCalls++;
         checkIfVideoPausedApiCallsCompleted();
     }
 
     @Override
     public void plotCoord(List<MarkerInfo> coordList) {
-        BitmapDrawable bitmapDrawable=(BitmapDrawable)getResources().getDrawable(R.drawable.ic_marker_bike);
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_marker_bike);
         Bitmap bitmap = bitmapDrawable.getBitmap();
         Bitmap smallMarker = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
 
@@ -868,6 +934,58 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
         }
         videoPausedStateApiCalls++;
         checkIfVideoPausedApiCallsCompleted();
+
+
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+
+            @Override
+            public View getInfoWindow(Marker arg0) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+
+                LinearLayout info = new LinearLayout(VideoMapActivity.this);
+                info.setOrientation(LinearLayout.VERTICAL);
+
+                TextView title = new TextView(VideoMapActivity.this);
+                title.setTextColor(Color.BLACK);
+                title.setGravity(Gravity.CENTER);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setText(marker.getTitle());
+
+                TextView snippet = new TextView(VideoMapActivity.this);
+                snippet.setTextColor(Color.GRAY);
+                snippet.setText(marker.getSnippet());
+
+                info.addView(title);
+                info.addView(snippet);
+
+                return info;
+            }
+        });
+    }
+
+    @Override
+    public void plotLimeBikes(List<MarkerInfo> limeBikes) {
+
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_marker_limebike);
+        Bitmap bitmap = bitmapDrawable.getBitmap();
+        Bitmap smallMarker = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
+
+        for (int i = 0; i < limeBikes.size(); i++) {
+            limeBikeMarker = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(limeBikes.get(i).getLatitude(), limeBikes.get(i).getLongitude()))
+                    .icon(BitmapDescriptorFactory.fromBitmap(smallMarker))
+                    .title(limeBikes.get(i).getTitle())
+                    .snippet(limeBikes.get(i).getSubtitle()));
+            poiMarkers.add(limeBikeMarker);
+        }
+
+        videoPausedStateApiCalls++;
+        checkIfVideoPausedApiCallsCompleted();
+
     }
 
     @Override
@@ -887,6 +1005,8 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
 
     @Override
     public void plotRouteDetailVideoGeoPointsOnMap() {
+        progressBarTextView.setText(getResources().getString(R.string.loading_poi));
+        presenter.showProgressBar();
         mMap.clear();
         plotVideoGeoPoints(RouteManager.getSharedInstance().getCustomVideoGeoPoints());
         presenter.getRouteDetailStopsGeoPoints();
@@ -900,10 +1020,6 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     @Override
     public void resetVideoView() {
         simpleExoPlayer.stop();
-//        simpleExoPlayer.setOnInfoListener(null);
-//        simpleExoPlayer.setOnCompletionListener(null);
-//        simpleExoPlayer.setOnErrorListener(null);
-
         videoControlView.changePlayOrPauseIcon(true);
         presenter.stopPolling();
 
@@ -914,7 +1030,8 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
     @Override
     public void plotRouteDetailStopsOnMap(List<Stop> stops) {
 
-        BitmapDrawable bitmapDrawable=(BitmapDrawable)getResources().getDrawable(R.drawable.ic_map_stop);
+        this.stops = stops;
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_map_stop);
         Bitmap bitmap = bitmapDrawable.getBitmap();
         Bitmap smallMarker = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
 
@@ -926,9 +1043,9 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
                     .snippet("Connections: " + stops.get(i).getRoute_list() + "\nAmenities: " + stops.get(i).getAmenities()));
         }
 
-        com.google.maps.model.LatLng origin = new com.google.maps.model.LatLng(RouteManager.getSharedInstance().getSelectedDeparture().getLat(), RouteManager.getSharedInstance().getSelectedDeparture().getLng());
-        com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng(RouteManager.getSharedInstance().getSelectedDestination().getLat(), RouteManager.getSharedInstance().getSelectedDestination().getLng());
-        presenter.fetchDirectionDetails(origin, destination, TravelMode.DRIVING);
+        if (progressBarLayout.getVisibility() == View.VISIBLE) {
+            presenter.hideProgressBar();
+        }
     }
 
     @Override
@@ -963,6 +1080,12 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
             case R.id.fullscreen_map_imageview:
                 isFullscreen = !isFullscreen;
                 presenter.fullscreenButtonClicked(false);
+                break;
+            case R.id.map_view_button:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                break;
+            case R.id.satellite_view_button:
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
                 break;
         }
     }
@@ -1004,57 +1127,61 @@ public class VideoMapActivity extends BaseActivity implements OnMapReadyCallback
         presenter.hideProgressBar();
     }
 
-    @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
 
-    }
+    // Exo Player Listeners Implemented
+    Player.EventListener exoPlayerEventListener = new Player.EventListener() {
+        @Override
+        public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
 
-    @Override
-    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-
-    }
-
-    @Override
-    public void onLoadingChanged(boolean isLoading) {
-
-    }
-
-    @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if (playbackState == ExoPlayer.STATE_BUFFERING){
-            presenter.showBufferingProgressBar();
-        } else {
-            presenter.hideBufferingProgressBar();
         }
-    }
 
-    @Override
-    public void onRepeatModeChanged(int repeatMode) {
+        @Override
+        public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
 
-    }
+        }
 
-    @Override
-    public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
+        @Override
+        public void onLoadingChanged(boolean isLoading) {
 
-    }
+        }
 
-    @Override
-    public void onPlayerError(ExoPlaybackException error) {
+        @Override
+        public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+            presenter.showBufferingProgressBar();
+            if (playbackState == ExoPlayer.STATE_READY || playbackState == ExoPlayer.STATE_ENDED) {
+                presenter.hideBufferingProgressBar();
+            }
+        }
 
-    }
+        @Override
+        public void onRepeatModeChanged(int repeatMode) {
 
-    @Override
-    public void onPositionDiscontinuity(int reason) {
+        }
 
-    }
+        @Override
+        public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
 
-    @Override
-    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+        }
 
-    }
+        @Override
+        public void onPlayerError(ExoPlaybackException error) {
 
-    @Override
-    public void onSeekProcessed() {
+        }
 
-    }
+        @Override
+        public void onPositionDiscontinuity(int reason) {
+
+        }
+
+        @Override
+        public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+
+        }
+
+        @Override
+        public void onSeekProcessed() {
+
+        }
+    };
+
 }

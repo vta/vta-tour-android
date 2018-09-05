@@ -149,7 +149,7 @@
         <item>@string/right</item>
     </string-array>
 
-    <string name="loading_poi">Please wait a moment.\nLoading places of interest...</string>
+    <string name="loading_poi">Please wait a moment.\nLoading...</string>
     <string name="fetching_poi_details">Please wait a moment.\nLoading details of the place...</string>
     <string name="title_activity_routes">RoutesActivity</string>
     <string name="section_format">Hello World from section: %1$d</string>
@@ -158,5 +158,9 @@
     <string name="fetching_route_details">Please wait a moment.\nLoading details of the routes...</string>
     <string name="loading_nearby_type">Please wait a moment.\nLoading Nearby Categories...</string>
     <string name="loading_nearby_custom_poi">Please wait a moment.\nLoading Nearby Custom POI...</string>
+
+    <string name="map_view_button_name">Map</string>
+    <string name="satellite_view_button_name">Satellite</string>
+
 
 </resources>

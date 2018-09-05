@@ -14,8 +14,7 @@
             android:id="@+id/content_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="@dimen/value_20dp">
+            android:orientation="vertical">
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -24,12 +23,11 @@
                 <ImageView
                     android:id="@+id/header_logo"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/value_200dp"
+                    android:layout_height="150dp"
                     android:layout_gravity="center"
                     android:layout_marginBottom="@dimen/value_15dp"
                     android:adjustViewBounds="true"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/vta_logo" />
+                    android:scaleType="fitXY" />
 
                 <ImageView
                     android:id="@+id/poi_detail_button_walk"
@@ -39,80 +37,107 @@
                     android:src="@drawable/ic_walk" />
             </FrameLayout>
 
-
-            <TextView
-                android:id="@+id/plcae_of_interest_name"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textColor="@color/black"
-                android:textSize="20sp" />
+                android:orientation="vertical"
+                android:paddingBottom="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp">
 
-            <RatingBar
-                android:id="@+id/rating_bar"
-                style="@style/custom_rating_bar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:isIndicator="true"
-                android:numStars="5"
-                android:stepSize="1.0" />
+                <TextView
+                    android:id="@+id/plcae_of_interest_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="start"
+                    android:textColor="@color/black"
+                    android:textSize="15sp"
+                    tools:text="Bank of America" />
 
+                <RatingBar
+                    android:id="@+id/rating_bar"
+                    style="@style/custom_rating_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="10dp"
+                    android:isIndicator="true"
+                    android:numStars="5"
+                    android:scaleX="2"
+                    android:scaleY="2"
+                    android:stepSize="1.0" />
 
-            <TextView
-                android:id="@+id/poi_distance_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/value_10dp"
-                android:textSize="15sp" />
+                <TextView
+                    android:id="@+id/poi_distance_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/value_10dp"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="0.16 mi - 2 mins" />
 
+                <TextView
+                    android:id="@+id/availability"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:drawablePadding="@dimen/value_10dp"
+                    android:drawableStart="@drawable/ic_closed_now"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:visibility="visible"
+                    tools:text="Close Now" />
 
-            <TextView
-                android:id="@+id/availability"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/value_20dp"
-                android:drawablePadding="@dimen/value_10dp"
-                android:drawableStart="@drawable/ic_closed_now"
-                android:gravity="center_vertical"
-                android:textSize="17sp"
-                android:visibility="gone" />
+                <TextView
+                    android:id="@+id/address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:drawablePadding="@dimen/value_10dp"
+                    android:drawableStart="@drawable/ic_landmark"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:visibility="visible"
+                    tools:text="Test Address" />
 
+                <TextView
+                    android:id="@+id/phone_number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:drawablePadding="@dimen/value_10dp"
+                    android:drawableStart="@drawable/ic_phone"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:visibility="visible"
+                    tools:text="9823042240" />
 
-            <TextView
-                android:id="@+id/address"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/value_10dp"
-                android:drawablePadding="@dimen/value_10dp"
-                android:drawableStart="@drawable/ic_landmark"
-                android:gravity="center_vertical"
-                android:textSize="17sp"
-                android:visibility="gone" />
+                <TextView
+                    android:id="@+id/website"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:drawablePadding="@dimen/value_10dp"
+                    android:drawableStart="@drawable/ic_website"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:visibility="visible"
+                    tools:text="www.tushar.com" />
 
+            </LinearLayout>
 
-            <TextView
-                android:id="@+id/phone_number"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/value_10dp"
-                android:drawablePadding="@dimen/value_10dp"
-                android:drawableStart="@drawable/ic_phone"
-                android:gravity="center_vertical"
-                android:textSize="17sp"
-                android:visibility="gone" />
+            <fragment
+                android:id="@+id/map"
+                android:name="com.google.android.gms.maps.MapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-
-            <TextView
-                android:id="@+id/website"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/value_10dp"
-                android:drawablePadding="@dimen/value_10dp"
-                android:drawableStart="@drawable/ic_website"
-                android:gravity="center_vertical"
-                android:textSize="17sp"
-                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout
@@ -138,6 +163,7 @@
                 android:text="@string/fetching_poi_details"
                 android:textColor="@color/colorWhite" />
         </LinearLayout>
+
     </RelativeLayout>
 
 </ScrollView>

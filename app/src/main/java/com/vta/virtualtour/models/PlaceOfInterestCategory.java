@@ -1,9 +1,8 @@
 package com.vta.virtualtour.models;
 
-import java.util.ArrayList;
-
 /**
- * Created by tushar on 23/04/18.
+ * Created by tushar
+ * Created on 23/04/18.
  */
 
 public class PlaceOfInterestCategory {

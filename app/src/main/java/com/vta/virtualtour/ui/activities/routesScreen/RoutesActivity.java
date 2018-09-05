@@ -3,7 +3,6 @@ package com.vta.virtualtour.ui.activities.routesScreen;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
@@ -20,8 +19,6 @@ import com.vta.virtualtour.ui.fragments.nearMeScreen.NearMeFragment;
 import com.vta.virtualtour.ui.fragments.virtualTourScreen.VirtualTourFragment;
 import com.vta.virtualtour.utility.Constants;
 import com.vta.virtualtour.utility.FetchCurrentLocation;
-
-import org.joda.time.LocalDate;
 
 public class RoutesActivity extends BaseActivity implements RoutesContract.View,
         VirtualTourFragment.VirtualTourFragmentInteractionListener, FetchCurrentLocation.FetchCurrentLocationListener, TabLayout.OnTabSelectedListener {

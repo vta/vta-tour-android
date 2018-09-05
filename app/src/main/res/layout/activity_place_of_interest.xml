@@ -27,6 +27,7 @@
                 android:layout_marginEnd="13dp"
                 android:layout_marginStart="13dp"
                 android:layout_marginTop="5dp"
+                android:dropDownVerticalOffset="90dp"
                 android:prompt="@string/place_of_interest_spinner_title" />
 
         </LinearLayout>

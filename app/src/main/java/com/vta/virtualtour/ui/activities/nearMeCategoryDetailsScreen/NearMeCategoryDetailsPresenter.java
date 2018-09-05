@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by tushar on 20-07-2018.
+ * Created by tushar
+ * Created on 20-07-2018.
  */
 
 public class NearMeCategoryDetailsPresenter implements NearMeCategoryDetailsContract.Presenter {
@@ -58,11 +59,7 @@ public class NearMeCategoryDetailsPresenter implements NearMeCategoryDetailsCont
         RouteManager.getSharedInstance().fetchMeetups(new LatLng(stop.getLat(), stop.getLng()), new RouteManager.FetchMeetupsListener() {
             @Override
             public void didFinishFetchingMeetups(List<MarkerInfo> meetups, String error) {
-                List<String> meetsUpList = new ArrayList<String>();
-                for (MarkerInfo markerInfo : meetups) {
-                    meetsUpList.add(markerInfo.getTitle());
-                }
-                view.reloadRecyclerView(meetsUpList);
+                view.reloadMeetupRecyclerView(meetups);
             }
         });
     }

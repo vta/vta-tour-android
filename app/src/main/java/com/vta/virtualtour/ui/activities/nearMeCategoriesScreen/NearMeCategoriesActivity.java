@@ -12,14 +12,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.vta.virtualtour.R;
 import com.vta.virtualtour.adapters.NearMeCategoriesAdapter;
 import com.vta.virtualtour.managers.RouteManager;
 import com.vta.virtualtour.models.NearByCategory;
-import com.vta.virtualtour.models.Route;
 import com.vta.virtualtour.models.Stop;
 import com.vta.virtualtour.ui.activities.BaseActivity;
 import com.vta.virtualtour.ui.activities.nearMeCategoryDetailsScreen.NearMeCategoryDetailsActivity;
@@ -29,7 +27,8 @@ import com.vta.virtualtour.ui.activities.placeOfInterestScreen.PlaceOfInterestAc
 import java.util.ArrayList;
 
 /**
- * Created by tushar on 7/19/2018.
+ * Created by tushar
+ * Created on 7/19/2018.
  */
 public class NearMeCategoriesActivity extends BaseActivity implements NearMeCategoriesContract.View {
 
@@ -40,6 +39,7 @@ public class NearMeCategoriesActivity extends BaseActivity implements NearMeCate
     private NearMeCategoriesAdapter nearMeCategoriesAdapter;
     private ArrayList<NearByCategory> nearByCategories = new ArrayList<>();
     private Stop stop;
+    private boolean loadMore = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,17 +54,19 @@ public class NearMeCategoriesActivity extends BaseActivity implements NearMeCate
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
-        getSupportActionBar().setCustomView(R.layout.action_bar_title_layout);
+//        getSupportActionBar().setCustomView(R.layout.action_bar_title_layout);
         presenter.fetchIntegrations();
         fetchNearbyCategories();
     }
 
     private void fetchNearbyCategories() {
-        if (stop != null){
+        if (stop != null) {
+            loadMore = false;
             presenter.showProgressBar();
             progressBarTextView.setText(getResources().getString(R.string.loading_nearby_type));
             presenter.fetchPlaceOfInterestList(new LatLng(stop.getLat(), stop.getLng()));
-            ((TextView) findViewById(R.id.action_bar_title)).setText(stop.getName());
+            getSupportActionBar().setTitle(stop.getName());
+
         }
     }
 
@@ -72,24 +74,35 @@ public class NearMeCategoriesActivity extends BaseActivity implements NearMeCate
         nearMeCategoriesAdapter = new NearMeCategoriesAdapter(this, nearByCategories, new NearMeCategoriesAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(NearByCategory nearByCategory) {
-                if (nearByCategory.isPoiCategory()){
+                if (nearByCategory.isPoiCategory()) {
                     Intent intent = new Intent(NearMeCategoriesActivity.this, PlaceOfInterestActivity.class);
                     Bundle bundle = new Bundle();
-                    bundle.putString("latitude", stop.getLat()+"");
-                    bundle.putString("longitude", stop.getLng()+"");
+                    bundle.putString("latitude", stop.getLat() + "");
+                    bundle.putString("longitude", stop.getLng() + "");
                     bundle.putBoolean("fromNearMe", true);
                     bundle.putString("category", nearByCategory.getKey());
+                    bundle.putString("StopName", stop.getName());
                     intent.putExtras(bundle);
                     startActivity(intent);
-                }
-                else if (nearByCategory.getKey().equals("custom_poi")){
+                } else if (nearByCategory.getKey().equals("custom_poi")) {
                     Intent intent = new Intent(NearMeCategoriesActivity.this, NearMeCustomPoiActivity.class);
+                    intent.putExtra("StopName", stop.getName());
+                    intent.putExtra("latitude", stop.getLat() + "");
+                    intent.putExtra("longitude", stop.getLng() + "");
                     startActivity(intent);
-                }
-                else {
+                } else if (nearByCategory.getKey().equals("Load More...")) {
+                    presenter.showProgressBar();
+
+                    // Remove Last 2 Entries
+                    nearByCategories.remove(nearByCategories.size() - 1);
+                    nearByCategories.remove(nearByCategories.size() - 1);
+                    presenter.loadMorePOIS(new LatLng(stop.getLat(), stop.getLng()));
+                    loadMore = true;
+                } else {
                     Intent intent = new Intent(NearMeCategoriesActivity.this, NearMeCategoryDetailsActivity.class);
                     intent.putExtra("stop", stop);
                     intent.putExtra("nearByCategory", nearByCategory);
+                    intent.putExtra("StopName", stop.getName());
                     startActivity(intent);
                 }
             }
@@ -109,7 +122,7 @@ public class NearMeCategoriesActivity extends BaseActivity implements NearMeCate
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        for (int i = 0; i < RouteManager.getSharedInstance().getNearMeStopList().size(); i++){
+        for (int i = 0; i < RouteManager.getSharedInstance().getNearMeStopList().size(); i++) {
             menu.add(Menu.NONE, i, Menu.NONE, RouteManager.getSharedInstance().getNearMeStopList().get(i).getName());
         }
         return true;
@@ -141,7 +154,9 @@ public class NearMeCategoriesActivity extends BaseActivity implements NearMeCate
 
     @Override
     public void showCategory(ArrayList<NearByCategory> categories) {
-        nearByCategories = new ArrayList<>();
+        if (!loadMore) {
+            nearByCategories = new ArrayList<>();
+        }
         nearByCategories.addAll(categories);
         setUpRecyclerListAdapter();
         presenter.hideProgressBar();
